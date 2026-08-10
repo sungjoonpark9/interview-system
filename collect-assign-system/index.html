@@ -80,13 +80,13 @@
     <ol>
       <li>
         <div class="step-text">
-          <a href="screens/02-interviewer-submit.html">인터뷰어 제출</a> 화면에서 이름·이메일 입력 후 날짜 하나와 시간 1~2개를 골라 제출
+          <a href="screens/02-interviewer-submit.html">인터뷰어 제출</a> 화면에서 발급받은 인터뷰어 코드 입력 후 날짜 하나와 시간 1~2개를 골라 제출
           <div class="step-detail">→ 관리자 워크북 ②인터뷰어가용시간 탭에 쌓입니다 (아직 슬롯은 안 만들어짐)</div>
         </div>
       </li>
       <li>
         <div class="step-text">
-          <a href="screens/01-applicant-submit.html">지원자 제출</a> 화면에서 이름·이메일 입력 후 방금 인터뷰어가 고른 것과 겹치는 날짜·시간을 골라 제출
+          <a href="screens/01-applicant-submit.html">지원자 제출</a> 화면에서 발급받은 예약코드 입력 후 방금 인터뷰어가 고른 것과 겹치는 날짜·시간을 골라 제출
           <div class="step-detail">→ ③지원자접수 탭에 "배정대기" 상태로 쌓입니다</div>
         </div>
       </li>
@@ -167,7 +167,7 @@
 <script>
   function resetAll(){
     if(!confirm('이 데모의 모든 저장된 데이터를 초기화할까요?')) return;
-    try{ localStorage.removeItem('vm2027_collectassign_demo_v1'); }catch(e){}
+    try{ localStorage.removeItem('vm2027_collectassign_code_demo_v2'); }catch(e){}
     alert('초기화되었습니다.');
   }
 </script>

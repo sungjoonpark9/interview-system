@@ -219,7 +219,7 @@
     if (session) {
       bar.classList.add('show');
       var roleLabel = session.role === 'admin' ? 'VM 관리자' : '인터뷰어';
-      document.getElementById('sessionLabel').innerHTML = '<b>' + session.name + '</b>님 · ' + roleLabel + '로 접속 중';
+      document.getElementById('sessionLabel').innerHTML = '<b>' + session.label + '</b> · ' + roleLabel + '로 접속 중';
     } else {
       bar.classList.remove('show');
     }
@@ -301,7 +301,7 @@
 
   function resetDemo(){
     if (!confirm('이 브라우저에 저장된 데모 데이터를 모두 초기화할까요?\n(자원봉사자·인터뷰어 제출, 배정 결과, 문의, FAQ 등록 내역이 모두 지워집니다)')) return;
-    try { localStorage.removeItem('vm2027_collectassign_demo_v1'); } catch (e) {}
+    try { localStorage.removeItem('vm2027_collectassign_code_demo_v2'); } catch (e) {}
     var f = document.getElementById('frame');
     try { f.contentWindow.location.reload(); } catch (e) { location.reload(); }
   }

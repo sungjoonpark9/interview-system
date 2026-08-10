@@ -9,13 +9,13 @@
  *  2026.07.26_인터뷰시스템_베델계정불가_재구성안.docx 2-3절을 참고하세요.)
  *
  * 전제 — 워크북 시트 구성 (5개, 시트명이 정확히 일치해야 합니다)
- *   ①슬롯마스터   : 슬롯ID | 날짜 | 시간 | 정원 | 현재예약 | 배정인터뷰어 | 상태
- *   ②인터뷰어가용시간 : 이름 | 이메일 | 1일최대건수 | 가능날짜 | 가능시간
+ *   ①슬롯마스터   : 슬롯ID | 날짜 | 시간 | 정원 | 현재예약 | 인터뷰어코드 | 상태
+ *   ②인터뷰어가용시간 : 인터뷰어코드 | 1일최대건수 | 가능날짜 | 가능시간
  *     - 가능날짜·가능시간은 세미콜론(;)으로 구분된 여러 값입니다. 예: "2026-08-03;2026-08-04"
  *     - 두 목록의 모든 조합(날짜 × 시간)을 가능한 것으로 간주합니다. Forms 응답을
  *       그대로 붙여넣으면 되도록 이렇게 설계했습니다(날짜별로 다른 시간을 받는
  *       세밀한 조합은 지원하지 않습니다 — 필요하면 응답을 여러 행으로 나눠 붙여넣으세요).
- *   ③지원자접수   : 접수ID | 이름 | 이메일 | 구분 | 가능시간 | 배정슬롯ID | 상태
+ *   ③지원자접수   : 접수ID | 예약코드 | 구분 | 가능시간 | 배정슬롯ID | 상태
  *     - 가능시간은 세미콜론으로 구분된 "YYYY-MM-DD HH:MM" 값들입니다.
  *       예: "2026-08-03 10:00;2026-08-04 14:00"
  *     - 이 세미콜론 구분 형식은 Forms 다중 선택 응답이 Excel로 내보내질 때 실제로
@@ -70,7 +70,7 @@ function main(workbook: ExcelScript.Workbook) {
   const cTime = colIndex(slotHeader, "시간");
   const cCap = colIndex(slotHeader, "정원");
   const cBooked = colIndex(slotHeader, "현재예약");
-  const cInterviewer = colIndex(slotHeader, "배정인터뷰어");
+  const cInterviewer = colIndex(slotHeader, "인터뷰어코드");
   const cStatus = colIndex(slotHeader, "상태");
 
   const slots = slotValues.slice(1);
@@ -81,31 +81,29 @@ function main(workbook: ExcelScript.Workbook) {
   // ---------- 2. 인터뷰어 가용시간 → 슬롯 배정 ----------
   const availValues = availWs.getUsedRange().getValues();
   const availHeader = availValues[0] as string[];
-  const aName = colIndex(availHeader, "이름");
-  const aEmail = colIndex(availHeader, "이메일");
+  const aCode = colIndex(availHeader, "인터뷰어코드");
   const aMaxDay = colIndex(availHeader, "1일최대건수");
   const aDates = colIndex(availHeader, "가능날짜");
   const aTimes = colIndex(availHeader, "가능시간");
 
-  const dailyCount = new Map<string, number>(); // `${email}|${date}` -> 오늘 배정된 건수
+  const dailyCount = new Map<string, number>(); // `${interviewerCode}|${date}` -> 오늘 배정된 건수
 
   for (const row of availValues.slice(1)) {
-    const name = String(row[aName] ?? "");
-    const email = String(row[aEmail] ?? "");
-    if (!name || !email) continue;
+    const interviewerCode = String(row[aCode] ?? "");
+    if (!interviewerCode) continue;
     const maxDay = Number(row[aMaxDay]) || 99;
     const dates = splitList(row[aDates]);
     const times = splitList(row[aTimes]);
 
     for (const d of dates) {
-      const dayKey = `${email}|${d}`;
+      const dayKey = `${interviewerCode}|${d}`;
       for (const t of times) {
         const already = dailyCount.get(dayKey) ?? 0;
         if (already >= maxDay) continue;
         const idx = slotIndexByKey.get(slotKey(d, t));
         if (idx === undefined) continue; // 슬롯마스터에 미리 정의되지 않은 시간대는 건너뜀
         if (slots[idx][cInterviewer]) continue; // 이미 다른 인터뷰어가 배정된 슬롯
-        slots[idx][cInterviewer] = name;
+        slots[idx][cInterviewer] = interviewerCode;
         slots[idx][cStatus] = "모집중";
         dailyCount.set(dayKey, already + 1);
       }
@@ -115,8 +113,7 @@ function main(workbook: ExcelScript.Workbook) {
   // ---------- 3. 지원자 배정 (가능시간이 적은 순으로 우선) ----------
   const appValues = applicantWs.getUsedRange().getValues();
   const appHeader = appValues[0] as string[];
-  const pName = colIndex(appHeader, "이름");
-  const pEmail = colIndex(appHeader, "이메일");
+  const pCode = colIndex(appHeader, "예약코드");
   const pTimes = colIndex(appHeader, "가능시간");
   const pSlotId = colIndex(appHeader, "배정슬롯ID");
   const pStatus = colIndex(appHeader, "상태");
@@ -158,15 +155,14 @@ function main(workbook: ExcelScript.Workbook) {
   applicantWs.getUsedRange().setValues([appHeader, ...applicants]);
 
   // ---------- 5. 배정결과 시트 재작성 ----------
-  const resultHeader = ["접수ID", "지원자명", "이메일", "배정슬롯ID", "배정날짜", "배정시간", "배정인터뷰어", "통지여부", "확정"];
+  const resultHeader = ["접수ID", "예약코드", "배정슬롯ID", "배정날짜", "배정시간", "인터뷰어코드", "통지여부", "확정"];
   const resultRows: (string | number)[][] = [];
   applicants.forEach((row, i) => {
     if (!row[pSlotId]) return;
     const slotRow = slots.find(s => String(s[cSlotId]) === String(row[pSlotId]));
     resultRows.push([
       `A-${i + 1}`,
-      String(row[pName]),
-      String(row[pEmail]),
+      String(row[pCode]),
       String(row[pSlotId]),
       slotRow ? String(slotRow[cDate]) : "",
       slotRow ? String(slotRow[cTime]) : "",

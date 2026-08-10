@@ -104,32 +104,32 @@
 
   <div class="sheet active" id="sheet-slots">
     <table>
-      <thead><tr><th>슬롯ID</th><th>요일·시간대</th><th>날짜</th><th>시간</th><th>정원</th><th>현재예약</th><th>배정인터뷰어</th><th>상태</th></tr></thead>
+      <thead><tr><th>슬롯ID</th><th>요일·시간대</th><th>날짜</th><th>시간</th><th>정원</th><th>현재예약</th><th>인터뷰어 코드</th><th>상태</th></tr></thead>
       <tbody id="tbodySlots"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-avail">
     <table>
-      <thead><tr><th>이름</th><th>이메일</th><th>1일최대건수</th><th>선택한 요일·시간대</th><th>생성된 가능시간</th><th>제출시각</th></tr></thead>
+      <thead><tr><th>인터뷰어 코드</th><th>1일최대건수</th><th>선택한 요일·시간대</th><th>생성된 가능시간</th><th>제출시각</th></tr></thead>
       <tbody id="tbodyAvail"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-applicant">
     <table>
-      <thead><tr><th>이름</th><th>이메일</th><th>구분</th><th>가능시간</th><th>배정슬롯ID</th><th>상태</th></tr></thead>
+      <thead><tr><th>예약코드</th><th>구분</th><th>가능시간</th><th>배정슬롯ID</th><th>상태</th></tr></thead>
       <tbody id="tbodyApplicant"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-result">
     <table>
-      <thead><tr><th>접수ID</th><th>지원자명</th><th>이메일</th><th>배정슬롯ID</th><th>배정날짜</th><th>배정시간</th><th>배정인터뷰어</th></tr></thead>
+      <thead><tr><th>접수ID</th><th>예약코드</th><th>배정슬롯ID</th><th>배정날짜</th><th>배정시간</th><th>인터뷰어 코드</th></tr></thead>
       <tbody id="tbodyResult"></tbody>
     </table>
   </div>
 
   <div class="sheet" id="sheet-helpdesk">
     <table>
-      <thead><tr><th>문의유형</th><th>이름</th><th>이메일</th><th>문의내용</th><th>접수시각</th></tr></thead>
+      <thead><tr><th>문의유형</th><th>예약코드</th><th>문의내용</th><th>접수시각</th></tr></thead>
       <tbody id="tbodyHelpdesk"></tbody>
     </table>
   </div>
@@ -198,7 +198,7 @@
     // 인터뷰어가용시간
     var tA = document.getElementById('tbodyAvail');
     if(state.availability.length===0){
-      tA.innerHTML = '<tr class="empty-row"><td colspan="6">아직 제출된 인터뷰어 가용시간이 없습니다.</td></tr>';
+      tA.innerHTML = '<tr class="empty-row"><td colspan="5">아직 제출된 인터뷰어 가용시간이 없습니다.</td></tr>';
     } else {
       tA.innerHTML = state.availability.map(function(a){
         var seen = {};
@@ -208,7 +208,7 @@
           seen[CAStore.blockLabelForDateTime(w.slice(0,sp), w.slice(sp+1))] = true;
         });
         var blockLabels = Object.keys(seen).join(', ') || '-';
-        return '<tr><td>'+esc(a.name)+'</td><td>'+esc(a.email)+'</td><td>'+esc(a.maxDay)+'</td>'+
+        return '<tr><td>'+esc(CAStore.maskCode(a.interviewerCode))+'</td><td>'+esc(a.maxDay)+'</td>'+
           '<td>'+esc(blockLabels)+'</td><td>'+esc((a.times||[]).length)+'회</td><td>'+esc(a.at)+'</td></tr>';
       }).join('');
     }
@@ -216,10 +216,10 @@
     // 지원자접수
     var tP = document.getElementById('tbodyApplicant');
     if(state.applicants.length===0){
-      tP.innerHTML = '<tr class="empty-row"><td colspan="6">아직 제출된 지원자가 없습니다.</td></tr>';
+      tP.innerHTML = '<tr class="empty-row"><td colspan="5">아직 제출된 지원자가 없습니다.</td></tr>';
     } else {
       tP.innerHTML = state.applicants.map(function(r){
-        return '<tr><td>'+esc(r.name)+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.kind)+'</td>'+
+        return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+esc(r.kind)+'</td>'+
           '<td>'+esc((r.times||[]).length)+'건</td><td>'+(r.slotId?esc(r.slotId):'-')+'</td><td>'+statusPill(r.status)+'</td></tr>';
       }).join('');
     }
@@ -228,12 +228,12 @@
     var tR = document.getElementById('tbodyResult');
     var results = state.applicants.filter(function(r){return r.slotId;});
     if(results.length===0){
-      tR.innerHTML = '<tr class="empty-row"><td colspan="7">아직 배정 결과가 없습니다. "배정 실행"을 눌러 보세요.</td></tr>';
+      tR.innerHTML = '<tr class="empty-row"><td colspan="6">아직 배정 결과가 없습니다. "배정 실행"을 눌러 보세요.</td></tr>';
     } else {
       tR.innerHTML = results.map(function(r,i){
         var slot = state.slots.find(function(s){return s.id===r.slotId;});
-        return '<tr><td>A-'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.slotId)+'</td>'+
-          '<td>'+(slot?CAStore.fmtDateShort(slot.date):'-')+'</td><td>'+(slot?esc(slot.time):'-')+'</td><td>'+(slot?esc(slot.interviewer):'-')+'</td></tr>';
+        return '<tr><td>A-'+(i+1)+'</td><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+esc(r.slotId)+'</td>'+
+          '<td>'+(slot?CAStore.fmtDateShort(slot.date):'-')+'</td><td>'+(slot?esc(slot.time):'-')+'</td><td>'+(slot?esc(CAStore.maskCode(slot.interviewer)):'-')+'</td></tr>';
       }).join('');
     }
 
@@ -241,10 +241,10 @@
     var tH = document.getElementById('tbodyHelpdesk');
     var helpdesk = state.helpdesk || [];
     if(helpdesk.length===0){
-      tH.innerHTML = '<tr class="empty-row"><td colspan="5">아직 접수된 문의가 없습니다.</td></tr>';
+      tH.innerHTML = '<tr class="empty-row"><td colspan="4">아직 접수된 문의가 없습니다.</td></tr>';
     } else {
       tH.innerHTML = helpdesk.map(function(h){
-        return '<tr><td>'+esc(h.type)+'</td><td>'+esc(h.name)+'</td><td>'+esc(h.email)+'</td><td>'+esc(h.body)+'</td><td>'+esc(h.at)+'</td></tr>';
+        return '<tr><td>'+esc(h.type)+'</td><td>'+esc(CAStore.maskCode(h.reservationCode))+'</td><td>'+esc(h.body)+'</td><td>'+esc(h.at)+'</td></tr>';
       }).join('');
     }
 

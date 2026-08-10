@@ -6,7 +6,7 @@
    ※ 실제 Excel Office Script가 아닌 시연용 시뮬레이션입니다.
    ============================================================ */
 window.CAStore = (function () {
-  var KEY = "vm2027_collectassign_demo_v1";
+  var KEY = "vm2027_collectassign_code_demo_v2";
   var DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
   /* ---------- 요일별 고정 인터뷰 가능 블록 (1차 인터뷰어 활동 기간 기준) ----------
@@ -96,7 +96,7 @@ window.CAStore = (function () {
     return [
       { id: "F-2", q: "1순위 희망만 기록해도 됩니까?", a: "가능합니다. 다만 2~3순위까지 함께 알려주시면 일정 조율이 더 수월합니다.", at: nowLabel() },
       { id: "F-3", q: "제출한 가능 시간이 왜 바로 확정되지 않나요?", a: "이 시스템은 예약형이 아니라 수집·배정형입니다. 여러 사람이 제출한 가능 시간을 담당자가 모아서 한 번에 배정하기 때문에, 제출 즉시가 아니라 배정 실행 이후에 결과가 정해집니다.", at: nowLabel() },
-      { id: "F-4", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인을 마친 뒤 개별 연락(이메일 또는 JW Hub 공식 채널)으로 안내드립니다. 자동 발송은 사용하지 않습니다.", at: nowLabel() },
+      { id: "F-4", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인을 마친 뒤 승인된 별도 채널 또는 JW Hub를 통해 안내드립니다. 자동 발송은 사용하지 않습니다.", at: nowLabel() },
       { id: "F-5", q: "가족(부부)이 함께 인터뷰를 받고 싶습니다.", a: "제출 화면에서 \"부부가 함께 받습니다\"를 선택해 주세요. 담당자가 배정 시 함께 진행되도록 조율합니다.", at: nowLabel() },
       { id: "F-6", q: "제출 후 내용을 수정하고 싶습니다.", a: "이 화면에서는 직접 수정할 수 없습니다. 문의하기 화면으로 변경 내용을 남겨 주시면 담당자가 반영해 드립니다.", at: nowLabel() }
     ];
@@ -145,6 +145,12 @@ window.CAStore = (function () {
     return p(d.getMonth() + 1) + "." + p(d.getDate()) + "(" + DOW[d.getDay()] + ")";
   }
 
+  function maskCode(code) {
+    var value = String(code || "");
+    if (value.length <= 4) return value;
+    return "••••-" + value.slice(-4);
+  }
+
   /* ---------- 배정 실행 — assignment-office-script.ts 와 동일 로직 ---------- */
   function runAssignment(state) {
     var slotByKey = {};
@@ -162,7 +168,7 @@ window.CAStore = (function () {
         var slot = slotByKey[d + "_" + t];
         if (!slot) return;
         if (slot.interviewer) return;
-        slot.interviewer = a.name;
+        slot.interviewer = a.interviewerCode;
         slot.status = "모집중";
         dailyCount[d] = already + 1;
       });
@@ -204,7 +210,7 @@ window.CAStore = (function () {
   }
 
   return {
-    load: load, save: save, reset: reset, seed: seed, addLog: addLog, nowLabel: nowLabel, fmtDateShort: fmtDateShort,
+    load: load, save: save, reset: reset, seed: seed, addLog: addLog, nowLabel: nowLabel, fmtDateShort: fmtDateShort, maskCode: maskCode,
     runAssignment: runAssignment, DOW: DOW,
     WEEKLY_BLOCKS: WEEKLY_BLOCKS, PERIOD_START: PERIOD_START, PERIOD_END: PERIOD_END,
     blockById: blockById, blockLabel: blockLabel, blockOccurrenceDates: blockOccurrenceDates, expandBlockIds: expandBlockIds,

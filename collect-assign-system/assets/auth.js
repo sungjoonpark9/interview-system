@@ -1,31 +1,31 @@
 /* ============================================================
    VM 인터뷰 배정 시스템 (수집·배정형) — 인터뷰어·관리자 로그인
-   실제 인증 서버 없이, VM부가 미리 등록해 둔 이메일 목록과 대조하는
+   실제 인증 서버 없이, VM부가 미리 등록해 둔 운영 코드 목록과 대조하는
    방식을 흉내 낸 시연용 로그인입니다.
    - 자원봉사자(지원자) 화면: 로그인 없이 누구나 접속
-   - 인터뷰어 화면: 등록된 이메일로 로그인해야 접속 가능, 인터뷰어·FAQ만 이용
-   - VM 관리자 화면: 등록된 관리자 이메일로 로그인해야 접속 가능, 모든 화면 이용 가능
+   - 인터뷰어 화면: 등록된 인터뷰어 코드로 접속, 인터뷰어·FAQ만 이용
+   - VM 관리자 화면: 등록된 관리자 코드로 접속, 모든 화면 이용 가능
    - 로그인이 성공하면 접속 로그를 남깁니다 (관리자 워크북의 "최근 활동 로그"에 표시)
    ============================================================ */
 window.CAAuth = (function () {
-  var SESSION_KEY = "vm2027_ca_session_v1";
-  var LOG_KEY = "vm2027_ca_accesslog_v1";
+  var SESSION_KEY = "vm2027_ca_code_session_v2";
+  var LOG_KEY = "vm2027_ca_code_accesslog_v2";
 
-  // VM부가 사전 등록한 인터뷰어·관리자 이메일 목록 (실제 운영 시 관리 화면에서 등록/삭제)
+  // 시연용 코드입니다. 실제 운영 시에는 승인된 방식으로 별도 발급·회수해야 합니다.
   var WHITELIST = [
-    { email: "interviewer1@jw.org", name: "김민수", role: "interviewer" },
-    { email: "interviewer2@jw.org", name: "이수진", role: "interviewer" },
-    { email: "vm.admin@jw.org", name: "VM 관리자", role: "admin" }
+    { code: "INT-2027-01", label: "인터뷰어 01", role: "interviewer" },
+    { code: "INT-2027-02", label: "인터뷰어 02", role: "interviewer" },
+    { code: "VM-ADMIN-27", label: "VM 관리자", role: "admin" }
   ];
 
-  function normalize(email) {
-    return (email || "").trim().toLowerCase();
+  function normalize(code) {
+    return (code || "").trim().toUpperCase();
   }
 
-  function findAccount(email) {
-    var n = normalize(email);
+  function findAccount(code) {
+    var n = normalize(code);
     for (var i = 0; i < WHITELIST.length; i++) {
-      if (WHITELIST[i].email.toLowerCase() === n) return WHITELIST[i];
+      if (WHITELIST[i].code === n) return WHITELIST[i];
     }
     return null;
   }
@@ -35,7 +35,7 @@ window.CAAuth = (function () {
     try {
       var raw = localStorage.getItem(LOG_KEY);
       var logs = raw ? JSON.parse(raw) : [];
-      logs.unshift({ email: account.email, name: account.name, role: account.role, at: Date.now() });
+      logs.unshift({ code: account.code, label: account.label, role: account.role, at: Date.now() });
       if (logs.length > 200) logs.length = 200;
       localStorage.setItem(LOG_KEY, JSON.stringify(logs));
     } catch (e) {}
@@ -45,16 +45,16 @@ window.CAAuth = (function () {
       if (window.CAStore) {
         var state = window.CAStore.load();
         var roleLabel = account.role === "admin" ? "VM 관리자" : "인터뷰어";
-        window.CAStore.addLog(state, "[접속] " + account.name + "(" + roleLabel + ", " + account.email + ")님이 로그인했습니다.");
+        window.CAStore.addLog(state, "[접속] " + account.label + "(" + roleLabel + ") 코드로 로그인했습니다.");
         window.CAStore.save(state);
       }
     } catch (e) {}
   }
 
-  function login(email) {
-    var account = findAccount(email);
+  function login(code) {
+    var account = findAccount(code);
     if (!account) return null;
-    var session = { email: account.email, name: account.name, role: account.role, at: Date.now() };
+    var session = { code: account.code, label: account.label, role: account.role, at: Date.now() };
     try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
     recordLog(account);
     return session;
