@@ -62,6 +62,16 @@ window.CAAuth = (function () {
     return session;
   }
 
+  // 자원봉사자는 운영 사용자 명단과 별도로, 발급받은 예약코드로 세션을 만듭니다.
+  // 이 세션에는 이름·회중·연락처를 넣지 않습니다.
+  function loginVolunteer(code) {
+    var n = normalize(code);
+    if (!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(n)) return null;
+    var session = { code: n, label: "자원봉사자 " + n.slice(-4), role: "volunteer", at: Date.now() };
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+    return session;
+  }
+
   function logout() {
     try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
   }
@@ -84,6 +94,7 @@ window.CAAuth = (function () {
     WHITELIST: WHITELIST,
     findAccount: findAccount,
     login: login,
+    loginVolunteer: loginVolunteer,
     logout: logout,
     getSession: getSession,
     getAccessLogs: getAccessLogs

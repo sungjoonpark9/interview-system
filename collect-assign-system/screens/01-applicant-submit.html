@@ -159,6 +159,7 @@
 </div>
 
 <script src="../assets/store.js"></script>
+<script src="../assets/auth.js"></script>
 <script>
   const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
@@ -284,6 +285,8 @@
     const row=CAStore.load().applicants.find(function(r){ return r.reservationCode===code; });
     if(row && row.slotId){ alert('배정이 확정된 항목입니다. 변경은 문의하기를 이용해 주십시오.'); return; }
     verifiedCode = code;
+    var volunteerSession = CAAuth.loginVolunteer(code);
+    try { if(window.parent && window.parent !== window && typeof window.parent.CA_afterVolunteerLogin === 'function') window.parent.CA_afterVolunteerLogin(volunteerSession); } catch(e) {}
     document.getElementById('reservationCode').value = code;
     document.getElementById('reservationCode').readOnly = true;
     document.getElementById('availabilitySection').classList.add('show');

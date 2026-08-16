@@ -106,11 +106,20 @@ window.CAStore = (function () {
 
   function seedFaq() {
     return [
-      { id: "F-2", q: "1순위 희망만 기록해도 됩니까?", a: "가능합니다. 다만 2~3순위까지 함께 알려주시면 일정 조율이 더 수월합니다.", at: nowLabel() },
-      { id: "F-3", q: "제출한 가능 시간이 왜 바로 확정되지 않나요?", a: "이 시스템은 예약형이 아니라 수집·배정형입니다. 여러 사람이 제출한 가능 시간을 담당자가 모아서 한 번에 배정하기 때문에, 제출 즉시가 아니라 배정 실행 이후에 결과가 정해집니다.", at: nowLabel() },
-      { id: "F-4", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인을 마친 뒤 승인된 별도 채널 또는 JW Hub를 통해 안내드립니다. 자동 발송은 사용하지 않습니다.", at: nowLabel() },
-      { id: "F-5", q: "가족과 함께 인터뷰를 받을 수 있나요?", a: "자원봉사자 면접은 개별 면접이 원칙입니다. 각자 예약코드로 가능한 시간을 제출해 주십시오.", at: nowLabel() },
-      { id: "F-6", q: "제출 후 내용을 수정하고 싶습니다.", a: "제출 마감 전에는 같은 예약코드로 다시 접속해 수정할 수 있습니다. 배정 확정 후에는 문의하기에서 변경을 요청해 주십시오.", at: nowLabel() }
+      { id: "F-2", audience:"volunteer", q: "가능한 날짜는 어떻게 선택하나요?", a: "최대 1주일 범위에서 날짜별 오전·오후를 선택할 수 있습니다. 같은 날 오전과 오후를 모두 선택할 수 있습니다.", at: nowLabel() },
+      { id: "F-3", audience:"all", q: "제출한 가능 시간이 왜 바로 확정되지 않나요?", a: "여러 사람이 제출한 가능 시간을 담당자가 모아 배정하므로 제출 즉시 확정되지 않습니다.", at: nowLabel() },
+      { id: "F-4", audience:"volunteer", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인한 뒤 앱의 일정 화면과 승인된 안내 채널을 통해 알려드립니다.", at: nowLabel() },
+      { id: "F-5", audience:"volunteer", q: "가족과 함께 인터뷰를 받을 수 있나요?", a: "자원봉사자 면접은 개별 면접이 원칙입니다. 각자 예약코드로 가능한 시간을 제출해 주십시오.", at: nowLabel() },
+      { id: "F-6", audience:"all", q: "제출 후 내용을 수정하고 싶습니다.", a: "제출 마감 전에는 같은 코드로 다시 접속해 수정할 수 있습니다. 배정 확정 후에는 헬프데스크에서 변경을 요청해 주십시오.", at: nowLabel() },
+      { id: "F-7", audience:"interviewer", q: "인터뷰어 가용시간을 변경하려면 어떻게 하나요?", a: "제출 마감 전에는 같은 인터뷰어 코드로 다시 접속해 수정할 수 있습니다. 배정 후에는 헬프데스크로 요청해 주십시오.", at: nowLabel() }
+    ];
+  }
+
+  function seedNotices() {
+    var now = Date.now();
+    return [
+      { id:"N-1", audience:"all", title:"인터뷰 가능시간 제출 안내", body:"가능한 날짜와 오전·오후를 최대한 많이 선택해 주십시오.", createdAt:now, endsAt:"" },
+      { id:"N-2", audience:"interviewer", title:"인터뷰어 가용시간 확인", body:"기존에 제출한 가용시간을 확인하고 변경이 있으면 수정해 주십시오.", createdAt:now, endsAt:"" }
     ];
   }
 
@@ -121,6 +130,7 @@ window.CAStore = (function () {
       applicants: [],   // 지원자 제출 원본 (③시트)
       helpdesk: [],     // ⑤시트
       faq: seedFaq(),   // 자주 묻는 질문 (수작업 등록/삭제 가능)
+      notices: seedNotices(), // 공통·역할별 공지사항
       log: [],
       lastRun: null
     };
@@ -132,6 +142,7 @@ window.CAStore = (function () {
       if (raw) {
         var parsed = JSON.parse(raw);
         if (!parsed.faq) parsed.faq = seedFaq(); // 이전 버전 데모 데이터와의 호환
+        if (!parsed.notices) parsed.notices = seedNotices();
         return parsed;
       }
     } catch (e) {}

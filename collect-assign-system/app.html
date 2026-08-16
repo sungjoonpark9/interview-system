@@ -132,7 +132,8 @@
   </div>
 
   <div class="segrow" id="inquirySeg">
-    <div class="seg on" id="segHelpdesk" onclick="setInquiry('helpdesk')">헬프데스크</div>
+    <div class="seg" id="segNotice" onclick="setInquiry('notice')">공지사항 <span id="noticeNew" style="display:none;color:#e5484d;font-weight:700">N</span></div>
+    <div class="seg" id="segHelpdesk" onclick="setInquiry('helpdesk')">헬프데스크</div>
     <div class="seg" id="segFaq" onclick="setInquiry('faq')">FAQ</div>
   </div>
 
@@ -168,11 +169,12 @@
     </button>
     <button class="tab" data-tab="inquiry" onclick="setTab('inquiry')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-      <span>문의</span>
+      <span>소통</span>
     </button>
   </div>
 </div>
 
+<script src="assets/store.js"></script>
 <script src="assets/auth.js"></script>
 <script>
   var SCREENS = {
@@ -181,21 +183,21 @@
     interviewer: { title: '인터뷰어 가능시간 제출', src: 'screens/02-interviewer-submit.html' },
     admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html' },
     callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html' },
-    inquiry:     { title: '문의 · 헬프데스크', src: 'screens/04-helpdesk.html' }
+    inquiry:     { title: '소통 · 문의', src: 'screens/07-notices.html' }
   };
   var LOGIN_SRC = 'screens/00-login.html';
 
   var curTab = 'home';
-  var curInquiry = 'helpdesk';
+  var curInquiry = 'notice';
   var session = null;          // 현재 로그인 세션 (CAAuth 세션과 동기화)
   var pendingAuthTab = null;   // 로그인 화면을 띄우게 만든 원래 목적 탭
 
   /* ---------------------------------------------------------------
      접근 권한 규칙
-     - 자원봉사자(비로그인): 홈 · 자원봉사자 · 문의(헬프데스크/FAQ) 이용.
+     - 자원봉사자(비로그인): 홈 · 자원봉사자 · 소통(공지사항/헬프데스크/FAQ) 이용.
        인터뷰어·관리자 탭을 눌러도 실제 화면 대신 로그인 화면이 뜨고,
        로그인 전에는 인터뷰어·관리자 화면 내용을 볼 수 없습니다.
-     - 인터뷰어(로그인): 인터뷰어 · FAQ 탭만 이용 (다른 탭은 숨김, 문의는 FAQ만).
+     - 인터뷰어(로그인): 인터뷰어 · 공지·FAQ·헬프데스크를 이용.
      - VM 관리자(로그인): 모든 탭 이용 가능.
   --------------------------------------------------------------- */
   function isAuthorizedFor(id){
@@ -206,6 +208,7 @@
   }
 
   function allowedTabIds(){
+    if (session && session.role === 'volunteer') return ['applicant', 'inquiry'];
     if (session && session.role === 'interviewer') return ['interviewer', 'inquiry'];
     if (session && session.role === 'helpdesk') return ['callcenter', 'inquiry'];
     if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
@@ -226,7 +229,7 @@
     var bar = document.getElementById('sessionbar');
     if (session) {
       bar.classList.add('show');
-      var roleLabel = session.role === 'admin' ? 'VM 운영 관리자' : session.role === 'system' ? '시스템 관리자' : session.role === 'helpdesk' ? '콜센터 자원봉사자' : '인터뷰어';
+      var roleLabel = session.role === 'admin' ? 'VM 운영 관리자' : session.role === 'system' ? '시스템 관리자' : session.role === 'helpdesk' ? '콜센터 자원봉사자' : session.role === 'volunteer' ? '자원봉사자' : '인터뷰어';
       document.getElementById('sessionLabel').innerHTML = '<b>' + session.label + '</b> · ' + roleLabel + '로 접속 중';
     } else {
       bar.classList.remove('show');
@@ -257,6 +260,9 @@
     }
     setTab(land);
   };
+  window.CA_afterVolunteerLogin = function(s){
+    session=s; updateTabVisibility(); updateSessionBar(); updateNoticeBadge();
+  };
 
   function showLoading(){
     var l = document.getElementById('loading');
@@ -274,8 +280,7 @@
     curTab = id;
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab === id); });
 
-    var interviewerOnly = session && session.role === 'interviewer';
-    document.getElementById('inquirySeg').classList.toggle('show', id === 'inquiry' && !interviewerOnly);
+    document.getElementById('inquirySeg').classList.toggle('show', id === 'inquiry');
 
     document.getElementById('screenTitle').textContent = SCREENS[id].title.split(' · ')[0];
 
@@ -284,8 +289,7 @@
       pendingAuthTab = id;
       src = LOGIN_SRC + '?for=' + encodeURIComponent(id);
     } else if (id === 'inquiry') {
-      if (interviewerOnly) curInquiry = 'faq'; // 인터뷰어는 FAQ만 이용
-      src = curInquiry === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html';
+      src = curInquiry === 'notice' ? 'screens/07-notices.html' : curInquiry === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html';
     } else {
       src = SCREENS[id].src;
     }
@@ -293,18 +297,29 @@
   }
 
   function setInquiry(which){
-    if (session && session.role === 'interviewer') return; // 인터뷰어는 FAQ 고정
     curInquiry = which;
+    document.getElementById('segNotice').classList.toggle('on', which === 'notice');
     document.getElementById('segHelpdesk').classList.toggle('on', which === 'helpdesk');
     document.getElementById('segFaq').classList.toggle('on', which === 'faq');
-    loadFrame(which === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html');
+    loadFrame(which === 'notice' ? 'screens/07-notices.html' : which === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html');
   }
 
   function loadFrame(src){
     var f = document.getElementById('frame');
+    var join = src.indexOf('?')>=0 ? '&' : '?';
+    src = src + join + 'v=20260816c';
     if (f.getAttribute('src') === src) return;
     showLoading();
     f.setAttribute('src', src);
+  }
+
+  function updateNoticeBadge(){
+    try{
+      var st=window.CAStore ? CAStore.load() : JSON.parse(localStorage.getItem('vm2027_collectassign_code_demo_v3')||'{}');
+      var role=session ? session.role : 'volunteer', now=Date.now(), week=7*24*60*60*1000;
+      var fresh=(st.notices||[]).some(function(n){ return (!n.audience||n.audience==='all'||n.audience===role) && now-Number(n.createdAt||0)<week; });
+      document.getElementById('noticeNew').style.display=fresh?'inline':'none';
+    }catch(e){}
   }
 
   function resetDemo(){
@@ -318,7 +333,8 @@
     loadSessionFromStorage();
     updateTabVisibility();
     updateSessionBar();
-    var start = (session && session.role === 'interviewer') ? 'interviewer' : 'home';
+    updateNoticeBadge();
+    var start = (session && session.role === 'interviewer') ? 'interviewer' : (session && session.role === 'volunteer') ? 'applicant' : 'home';
     setTab(start);
   })();
 </script>
