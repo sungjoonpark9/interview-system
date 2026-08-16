@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>인터뷰어·관리자 로그인 (수집·배정형 샘플)</title>
+<title>운영 사용자 로그인 (수집·배정형 샘플)</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
 <link rel="stylesheet" href="../assets/augen.css">
@@ -36,15 +36,15 @@
 
 <div class="card">
   <div class="mark">SIC</div>
-  <h1>운영 사용자 로그인</h1>
-  <div class="sub">VM부가 미리 발급한 운영 코드로만 접속할 수 있습니다. 이름이나 이메일은 입력하지 않습니다.</div>
+  <h1 id="loginTitle">운영 사용자 로그인</h1>
+  <div class="sub" id="loginSub">VM부가 미리 발급한 운영 코드로만 접속할 수 있습니다. 이름이나 이메일은 입력하지 않습니다.</div>
 
-  <label for="codeInput">운영 코드</label>
+  <label for="codeInput" id="codeLabel">운영 코드</label>
   <input type="text" id="codeInput" placeholder="예: INT-2027-01" autocomplete="off">
   <div class="err" id="errMsg"></div>
   <button class="btn" onclick="doLogin()">로그인</button>
 
-  <div class="note">샘플 코드<br>인터뷰어: INT-2027-01<br>콜센터: CALL-2027-01<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27</div>
+  <div class="note" id="sampleCodes">샘플 코드<br>인터뷰어: INT-2027-01<br>콜센터: CALL-2027-01<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27</div>
 
   <div class="foot">자원봉사자는 로그인이 필요 없습니다<br><a href="01-applicant-submit.html" onclick="return goHome()">자원봉사자 화면으로 바로 가기</a></div>
 </div>
@@ -52,6 +52,20 @@
 <script src="../assets/store.js"></script>
 <script src="../assets/auth.js"></script>
 <script>
+  var target = new URLSearchParams(location.search).get('for') || '';
+  var targetConfig = {
+    interviewer: { title:'인터뷰어 로그인', sub:'발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.', label:'인터뷰어 코드', placeholder:'예: INT-2027-01', sample:'샘플 코드<br>인터뷰어: INT-2027-01', roles:['interviewer'] },
+    admin: { title:'VM 운영 관리자 로그인', sub:'발급받은 관리자 코드로 로그인해 주십시오.', label:'관리자 코드', placeholder:'예: VM-ADMIN-27', sample:'샘플 코드<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27', roles:['admin','system'] },
+    callcenter: { title:'콜센터 자원봉사자 로그인', sub:'발급받은 콜센터 코드로 로그인해 주십시오.', label:'콜센터 코드', placeholder:'예: CALL-2027-01', sample:'샘플 코드<br>콜센터: CALL-2027-01', roles:['helpdesk'] }
+  };
+  var cfg = targetConfig[target];
+  if(cfg){
+    document.getElementById('loginTitle').textContent=cfg.title;
+    document.getElementById('loginSub').textContent=cfg.sub;
+    document.getElementById('codeLabel').textContent=cfg.label;
+    document.getElementById('codeInput').placeholder=cfg.placeholder;
+    document.getElementById('sampleCodes').innerHTML=cfg.sample;
+  }
   function embedded(){
     try { return window.parent && window.parent !== window; } catch (e) { return false; }
   }
@@ -69,6 +83,11 @@
     var session = CAAuth.login(code);
     if (!session) {
       document.getElementById('errMsg').textContent = '등록되지 않은 운영 코드입니다. 다시 확인해 주세요.';
+      return;
+    }
+    if(cfg && cfg.roles.indexOf(session.role)===-1){
+      CAAuth.logout();
+      document.getElementById('errMsg').textContent = '이 화면에서 사용할 수 없는 코드입니다.';
       return;
     }
     if (embedded() && typeof window.parent.CA_afterLogin === 'function') {

@@ -58,6 +58,12 @@
   .period-btn{flex:1; min-width:110px; border:1.5px solid var(--border); background:#fff; border-radius:12px; padding:10px 12px; font:inherit; font-size:12.5px; color:var(--gray); cursor:pointer;}
   .period-btn.on{background:var(--ink); border-color:var(--ink); color:#fff;}
   .loadbtn{border:0; background:none; color:var(--blue); font:inherit; font-size:11.5px; cursor:pointer; padding:4px 0 0;}
+  .code-row{display:flex; gap:8px; align-items:stretch;}
+  .code-row .input-icon{flex:1;}
+  .code-check{border:0; border-radius:12px; background:var(--ink); color:#fff; padding:0 17px; font:inherit; font-size:12.5px; cursor:pointer; white-space:nowrap;}
+  .code-status{display:none; margin-top:9px; padding:10px 12px; border-radius:12px; background:var(--blue-wash); color:var(--blue); font-size:11.5px;}
+  .availability-section{display:none;}
+  .availability-section.show{display:block;}
 
   .empty-note{font-size:12px; color:var(--gray-light); background:var(--light-gray); border-radius:13px; padding:14px; text-align:center;}
 
@@ -109,14 +115,18 @@
 
     <div class="field">
       <label>예약코드<span class="req">*</span></label>
-      <div class="input-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
-        <input type="text" id="reservationCode" placeholder="예: VM27-A7K9-P2Q4" maxlength="14" autocomplete="off" style="text-transform:uppercase">
+      <div class="code-row">
+        <div class="input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+          <input type="text" id="reservationCode" placeholder="예: VM27-A7K9-P2Q4" maxlength="14" autocomplete="off" style="text-transform:uppercase">
+        </div>
+        <button class="code-check" type="button" onclick="verifyCode()">코드 확인</button>
       </div>
       <div class="sec-note">예약코드는 안내받은 코드만 입력해 주십시오. 이름·회중·연락처는 이 화면에 입력하거나 저장하지 않습니다.</div>
-      <button class="loadbtn" type="button" onclick="loadExisting()">이미 제출한 내용을 확인·수정하려면 누르기</button>
+      <div class="code-status" id="codeStatus"></div>
     </div>
 
+    <div class="availability-section" id="availabilitySection">
     <div class="sec-title">가능한 날짜 고르기</div>
     <div class="sec-note">최대 7일까지 고른 뒤, 날짜별로 오전·오후를 선택해 주십시오. 같은 날 오전과 오후를 모두 선택할 수 있습니다.</div>
 
@@ -132,8 +142,9 @@
     <div class="summary-title">제출하실 가능 시간</div>
     <div class="summary-chips" id="summaryChips"><span class="sum-empty">아직 고른 시간이 없습니다.</span></div>
 
-        <button class="btn-submit" id="submitBtn" disabled onclick="submitApplicant()">이 시간들로 제출하기</button>
+    <button class="btn-submit" id="submitBtn" disabled onclick="submitApplicant()">이 시간들로 제출하기</button>
     <div class="privacy">제출하신 내용은 인터뷰 배정에만 사용됩니다.<br>이 화면에서는 즉시 확정되지 않습니다.</div>
+    </div>
   </div>
 
   <div class="card success" id="successPanel">
@@ -152,6 +163,7 @@
   const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
   const availability = {}; // date -> Set(times)
+  let verifiedCode = '';
   const dowNames = ['일','월','화','수','목','금','토'];
   function pad(n){ return n<10 ? '0'+n : ''+n; }
 
@@ -237,9 +249,9 @@
   }
 
   function submitApplicant(){
-    const reservationCode = (document.getElementById('reservationCode').value||'').trim().toUpperCase();
-    if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(reservationCode)){
-      alert('예약코드를 다시 확인해 주십시오. 예: VM27-A7K9-P2Q4');
+    const reservationCode = verifiedCode;
+    if(!reservationCode){
+      alert('예약코드를 먼저 확인해 주십시오.');
       return;
     }
 
@@ -266,17 +278,25 @@
     document.getElementById('successPanel').style.display = 'block';
   }
 
-  function loadExisting(){
+  function verifyCode(){
     const code=(document.getElementById('reservationCode').value||'').trim().toUpperCase();
-    if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){ alert('예약코드를 먼저 정확히 입력해 주십시오.'); return; }
+    if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){ alert('예약코드를 다시 확인해 주십시오. 예: VM27-A7K9-P2Q4'); return; }
     const row=CAStore.load().applicants.find(function(r){ return r.reservationCode===code; });
-    if(!row){ alert('이 코드로 제출된 내용을 찾지 못했습니다.'); return; }
-    if(row.slotId){ alert('배정이 확정된 항목입니다. 변경은 문의하기를 이용해 주십시오.'); return; }
+    if(row && row.slotId){ alert('배정이 확정된 항목입니다. 변경은 문의하기를 이용해 주십시오.'); return; }
+    verifiedCode = code;
+    document.getElementById('reservationCode').value = code;
+    document.getElementById('reservationCode').readOnly = true;
+    document.getElementById('availabilitySection').classList.add('show');
+    const status = document.getElementById('codeStatus');
+    status.style.display = 'block';
+    status.textContent = row ? '코드가 확인되었습니다. 기존 제출 내용을 불러왔습니다.' : '코드가 확인되었습니다. 가능한 날짜를 골라 주십시오.';
     chosenDates.clear(); Object.keys(availability).forEach(function(k){ delete availability[k]; });
-    (row.periods||[]).forEach(function(v){ const parts=v.split(' '); chosenDates.add(parts[0]); if(!availability[parts[0]]) availability[parts[0]]=new Set(); availability[parts[0]].add(parts[1]); });
+    if(row) (row.periods||[]).forEach(function(v){ const parts=v.split(' '); chosenDates.add(parts[0]); if(!availability[parts[0]]) availability[parts[0]]=new Set(); availability[parts[0]].add(parts[1]); });
     renderCalendar(); renderDateBlocks(); renderSummary();
-    alert('기존 제출 내용을 불러왔습니다. 수정한 뒤 다시 제출해 주십시오.');
+    setTimeout(function(){ document.getElementById('availabilitySection').scrollIntoView({behavior:'smooth',block:'start'}); }, 50);
   }
+
+  document.getElementById('reservationCode').addEventListener('keydown', function(e){ if(e.key==='Enter') verifyCode(); });
 
   renderCalendar();
 </script>

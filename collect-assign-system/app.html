@@ -211,7 +211,7 @@
     if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
     // 관리자 로그인 상태이거나 비로그인(자원봉사자) 상태에서는 모든 탭 버튼이 보입니다.
     // 비로그인 상태에서 인터뷰어·관리자 탭을 누르면 로그인 화면으로 안내됩니다.
-    return ['home', 'applicant', 'interviewer', 'admin', 'inquiry'];
+    return ['home', 'applicant', 'interviewer', 'admin', 'callcenter', 'inquiry'];
   }
 
   function updateTabVisibility(){
@@ -282,7 +282,7 @@
     var src;
     if ((id === 'interviewer' || id === 'admin' || id === 'callcenter') && !isAuthorizedFor(id)) {
       pendingAuthTab = id;
-      src = LOGIN_SRC;
+      src = LOGIN_SRC + '?for=' + encodeURIComponent(id);
     } else if (id === 'inquiry') {
       if (interviewerOnly) curInquiry = 'faq'; // 인터뷰어는 FAQ만 이용
       src = curInquiry === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html';
@@ -309,7 +309,7 @@
 
   function resetDemo(){
     if (!confirm('이 브라우저에 저장된 데모 데이터를 모두 초기화할까요?\n(자원봉사자·인터뷰어 제출, 배정 결과, 문의, FAQ 등록 내역이 모두 지워집니다)')) return;
-    try { localStorage.removeItem('vm2027_collectassign_code_demo_v2'); } catch (e) {}
+    try { localStorage.removeItem('vm2027_collectassign_code_demo_v3'); } catch (e) {}
     var f = document.getElementById('frame');
     try { f.contentWindow.location.reload(); } catch (e) { location.reload(); }
   }
