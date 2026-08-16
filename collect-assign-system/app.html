@@ -211,7 +211,8 @@
     if (session && session.role === 'volunteer') return ['applicant', 'inquiry'];
     if (session && session.role === 'interviewer') return ['interviewer', 'inquiry'];
     if (session && session.role === 'helpdesk') return ['callcenter', 'inquiry'];
-    if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
+    if (session && session.role === 'admin') return ['admin', 'inquiry'];
+    if (session && session.role === 'system') return ['admin', 'callcenter', 'inquiry'];
     // 관리자 로그인 상태이거나 비로그인(자원봉사자) 상태에서는 모든 탭 버튼이 보입니다.
     // 비로그인 상태에서 인터뷰어·관리자 탭을 누르면 로그인 화면으로 안내됩니다.
     return ['home', 'applicant', 'interviewer', 'admin', 'callcenter', 'inquiry'];
@@ -223,6 +224,24 @@
       var id = t.dataset.tab;
       t.style.display = allowed.indexOf(id) === -1 ? 'none' : '';
     });
+  }
+
+  function defaultTabForRole(){
+    if(!session) return 'home';
+    if(session.role==='volunteer') return 'applicant';
+    if(session.role==='interviewer') return 'interviewer';
+    if(session.role==='helpdesk') return 'callcenter';
+    if(session.role==='admin'||session.role==='system') return 'admin';
+    return 'home';
+  }
+
+  function updateInquirySegments(){
+    var maySubmit = !session || session.role==='volunteer' || session.role==='interviewer';
+    document.getElementById('segHelpdesk').style.display=maySubmit?'':'none';
+    if(!maySubmit && curInquiry==='helpdesk') curInquiry='notice';
+    document.getElementById('segNotice').classList.toggle('on',curInquiry==='notice');
+    document.getElementById('segHelpdesk').classList.toggle('on',curInquiry==='helpdesk');
+    document.getElementById('segFaq').classList.toggle('on',curInquiry==='faq');
   }
 
   function updateSessionBar(){
@@ -245,6 +264,7 @@
     session = null;
     updateTabVisibility();
     updateSessionBar();
+    updateInquirySegments();
     setTab('home');
   }
 
@@ -256,12 +276,12 @@
     var land = pendingAuthTab;
     pendingAuthTab = null;
     if (!land || !isAuthorizedFor(land)) {
-      land = (session.role === 'interviewer') ? 'interviewer' : 'home';
+      land = defaultTabForRole();
     }
     setTab(land);
   };
   window.CA_afterVolunteerLogin = function(s){
-    session=s; updateTabVisibility(); updateSessionBar(); updateNoticeBadge();
+    session=s; updateTabVisibility(); updateSessionBar(); updateInquirySegments(); updateNoticeBadge();
   };
 
   function showLoading(){
@@ -274,13 +294,14 @@
   function setTab(id){
     // 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
     if (session && allowedTabIds().indexOf(id) === -1) {
-      id = session.role === 'interviewer' ? 'interviewer' : session.role === 'helpdesk' ? 'callcenter' : 'home';
+      id = defaultTabForRole();
     }
 
     curTab = id;
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab === id); });
 
     document.getElementById('inquirySeg').classList.toggle('show', id === 'inquiry');
+    if(id==='inquiry') updateInquirySegments();
 
     document.getElementById('screenTitle').textContent = SCREENS[id].title.split(' · ')[0];
 
@@ -307,7 +328,7 @@
   function loadFrame(src){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260816c';
+    src = src + join + 'v=20260817a';
     if (f.getAttribute('src') === src) return;
     showLoading();
     f.setAttribute('src', src);
@@ -333,9 +354,9 @@
     loadSessionFromStorage();
     updateTabVisibility();
     updateSessionBar();
+    updateInquirySegments();
     updateNoticeBadge();
-    var start = (session && session.role === 'interviewer') ? 'interviewer' : (session && session.role === 'volunteer') ? 'applicant' : 'home';
-    setTab(start);
+    setTab(defaultTabForRole());
   })();
 </script>
 
