@@ -15,7 +15,9 @@ window.CAAuth = (function () {
   var WHITELIST = [
     { code: "INT-2027-01", label: "인터뷰어 01", role: "interviewer" },
     { code: "INT-2027-02", label: "인터뷰어 02", role: "interviewer" },
-    { code: "VM-ADMIN-27", label: "VM 관리자", role: "admin" }
+    { code: "CALL-2027-01", label: "콜센터 자원봉사자 01", role: "helpdesk" },
+    { code: "VM-ADMIN-27", label: "VM 운영 관리자", role: "admin" },
+    { code: "SYS-ADMIN-27", label: "시스템 관리자", role: "system" }
   ];
 
   function normalize(code) {
@@ -44,7 +46,7 @@ window.CAAuth = (function () {
     try {
       if (window.CAStore) {
         var state = window.CAStore.load();
-        var roleLabel = account.role === "admin" ? "VM 관리자" : "인터뷰어";
+        var roleLabel = account.role === "admin" ? "VM 운영 관리자" : account.role === "system" ? "시스템 관리자" : account.role === "helpdesk" ? "콜센터 자원봉사자" : "인터뷰어";
         window.CAStore.addLog(state, "[접속] " + account.label + "(" + roleLabel + ") 코드로 로그인했습니다.");
         window.CAStore.save(state);
       }

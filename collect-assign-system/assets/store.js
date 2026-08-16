@@ -6,7 +6,7 @@
    ※ 실제 Excel Office Script가 아닌 시연용 시뮬레이션입니다.
    ============================================================ */
 window.CAStore = (function () {
-  var KEY = "vm2027_collectassign_code_demo_v2";
+  var KEY = "vm2027_collectassign_code_demo_v3";
   var DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
   /* ---------- 요일별 고정 인터뷰 가능 블록 (1차 인터뷰어 활동 기간 기준) ----------
@@ -70,6 +70,18 @@ window.CAStore = (function () {
     var dow = new Date(dstr + "T00:00:00").getDay();
     return WEEKLY_BLOCKS.filter(function (b) { return b.dow === dow; });
   }
+
+  // 자원봉사자 화면은 개별 시간 대신 오전·오후 단위로 간단히 선택합니다.
+  // 선택된 오전·오후는 배정 시 실제 인터뷰 블록으로 펼쳐집니다.
+  function applicantPeriodsForDate(dstr) {
+    var blocks = blockRangeForDate(dstr);
+    var periods = [];
+    var am = blocks.filter(function (b) { return Number(b.start.slice(0, 2)) < 12; });
+    var pm = blocks.filter(function (b) { return Number(b.start.slice(0, 2)) >= 12; });
+    if (am.length) periods.push({ id: "AM", label: "오전", blocks: am });
+    if (pm.length) periods.push({ id: "PM", label: "오후", blocks: pm });
+    return periods;
+  }
   // 날짜+시작시간으로 사람이 읽을 블록 라벨 찾기 (예: "월요일 19:00-21:30")
   function blockLabelForDateTime(dstr, t) {
     var blocks = blockRangeForDate(dstr);
@@ -97,8 +109,8 @@ window.CAStore = (function () {
       { id: "F-2", q: "1순위 희망만 기록해도 됩니까?", a: "가능합니다. 다만 2~3순위까지 함께 알려주시면 일정 조율이 더 수월합니다.", at: nowLabel() },
       { id: "F-3", q: "제출한 가능 시간이 왜 바로 확정되지 않나요?", a: "이 시스템은 예약형이 아니라 수집·배정형입니다. 여러 사람이 제출한 가능 시간을 담당자가 모아서 한 번에 배정하기 때문에, 제출 즉시가 아니라 배정 실행 이후에 결과가 정해집니다.", at: nowLabel() },
       { id: "F-4", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인을 마친 뒤 승인된 별도 채널 또는 JW Hub를 통해 안내드립니다. 자동 발송은 사용하지 않습니다.", at: nowLabel() },
-      { id: "F-5", q: "가족(부부)이 함께 인터뷰를 받고 싶습니다.", a: "제출 화면에서 \"부부가 함께 받습니다\"를 선택해 주세요. 담당자가 배정 시 함께 진행되도록 조율합니다.", at: nowLabel() },
-      { id: "F-6", q: "제출 후 내용을 수정하고 싶습니다.", a: "이 화면에서는 직접 수정할 수 없습니다. 문의하기 화면으로 변경 내용을 남겨 주시면 담당자가 반영해 드립니다.", at: nowLabel() }
+      { id: "F-5", q: "가족과 함께 인터뷰를 받을 수 있나요?", a: "자원봉사자 면접은 개별 면접이 원칙입니다. 각자 예약코드로 가능한 시간을 제출해 주십시오.", at: nowLabel() },
+      { id: "F-6", q: "제출 후 내용을 수정하고 싶습니다.", a: "제출 마감 전에는 같은 예약코드로 다시 접속해 수정할 수 있습니다. 배정 확정 후에는 문의하기에서 변경을 요청해 주십시오.", at: nowLabel() }
     ];
   }
 
@@ -169,6 +181,7 @@ window.CAStore = (function () {
         if (!slot) return;
         if (slot.interviewer) return;
         slot.interviewer = a.interviewerCode;
+        slot.cap = Math.max(1, Number((a.capacities || {})[w]) || Number(a.defaultCapacity) || Number(a.maxDay) || 1);
         slot.status = "모집중";
         dailyCount[d] = already + 1;
       });
@@ -190,10 +203,12 @@ window.CAStore = (function () {
         var slot = slotByKey[d + "_" + t];
         if (!slot) return false;
         if (!slot.interviewer) return false;
-        if (slot.booked >= slot.cap) return false;
+        // 정원의 일부를 예외·변경 대응 여유로 남깁니다. 초기값은 70%이며 운영 중 조정 가능합니다.
+        var targetCap = Math.max(1, Math.floor(slot.cap * 0.7));
+        if (slot.booked >= targetCap) return false;
         slot.booked += 1;
-        var remain = slot.cap - slot.booked;
-        slot.status = remain <= 0 ? "마감" : (remain / slot.cap <= 0.34 ? "마감임박" : "모집중");
+        var remain = targetCap - slot.booked;
+        slot.status = remain <= 0 ? "자동배정완료" : (remain / targetCap <= 0.34 ? "마감임박" : "모집중");
         row.slotId = slot.id;
         row.status = "배정완료";
         assigned = true;
@@ -214,6 +229,6 @@ window.CAStore = (function () {
     runAssignment: runAssignment, DOW: DOW,
     WEEKLY_BLOCKS: WEEKLY_BLOCKS, PERIOD_START: PERIOD_START, PERIOD_END: PERIOD_END,
     blockById: blockById, blockLabel: blockLabel, blockOccurrenceDates: blockOccurrenceDates, expandBlockIds: expandBlockIds,
-    blockRangeForDate: blockRangeForDate, blockLabelForDateTime: blockLabelForDateTime
+    blockRangeForDate: blockRangeForDate, applicantPeriodsForDate: applicantPeriodsForDate, blockLabelForDateTime: blockLabelForDateTime
   };
 })();

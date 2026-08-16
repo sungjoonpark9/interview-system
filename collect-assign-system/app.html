@@ -162,6 +162,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>관리자</span>
     </button>
+    <button class="tab" data-tab="callcenter" onclick="setTab('callcenter')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H5.2L4 18.5V4z"/><path d="M8 8h8M8 12h5"/></svg>
+      <span>콜센터</span>
+    </button>
     <button class="tab" data-tab="inquiry" onclick="setTab('inquiry')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
       <span>문의</span>
@@ -176,6 +180,7 @@
     applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html' },
     interviewer: { title: '인터뷰어 가능시간 제출', src: 'screens/02-interviewer-submit.html' },
     admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html' },
+    callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html' },
     inquiry:     { title: '문의 · 헬프데스크', src: 'screens/04-helpdesk.html' }
   };
   var LOGIN_SRC = 'screens/00-login.html';
@@ -195,12 +200,15 @@
   --------------------------------------------------------------- */
   function isAuthorizedFor(id){
     if (id === 'interviewer') return !!session && (session.role === 'interviewer' || session.role === 'admin');
-    if (id === 'admin') return !!session && session.role === 'admin';
+    if (id === 'admin') return !!session && (session.role === 'admin' || session.role === 'system');
+    if (id === 'callcenter') return !!session && ['helpdesk','admin','system'].indexOf(session.role) >= 0;
     return true;
   }
 
   function allowedTabIds(){
     if (session && session.role === 'interviewer') return ['interviewer', 'inquiry'];
+    if (session && session.role === 'helpdesk') return ['callcenter', 'inquiry'];
+    if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
     // 관리자 로그인 상태이거나 비로그인(자원봉사자) 상태에서는 모든 탭 버튼이 보입니다.
     // 비로그인 상태에서 인터뷰어·관리자 탭을 누르면 로그인 화면으로 안내됩니다.
     return ['home', 'applicant', 'interviewer', 'admin', 'inquiry'];
@@ -218,7 +226,7 @@
     var bar = document.getElementById('sessionbar');
     if (session) {
       bar.classList.add('show');
-      var roleLabel = session.role === 'admin' ? 'VM 관리자' : '인터뷰어';
+      var roleLabel = session.role === 'admin' ? 'VM 운영 관리자' : session.role === 'system' ? '시스템 관리자' : session.role === 'helpdesk' ? '콜센터 자원봉사자' : '인터뷰어';
       document.getElementById('sessionLabel').innerHTML = '<b>' + session.label + '</b> · ' + roleLabel + '로 접속 중';
     } else {
       bar.classList.remove('show');
@@ -259,8 +267,8 @@
 
   function setTab(id){
     // 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
-    if (session && session.role === 'interviewer' && allowedTabIds().indexOf(id) === -1) {
-      id = 'interviewer';
+    if (session && allowedTabIds().indexOf(id) === -1) {
+      id = session.role === 'interviewer' ? 'interviewer' : session.role === 'helpdesk' ? 'callcenter' : 'home';
     }
 
     curTab = id;
@@ -272,7 +280,7 @@
     document.getElementById('screenTitle').textContent = SCREENS[id].title.split(' · ')[0];
 
     var src;
-    if ((id === 'interviewer' || id === 'admin') && !isAuthorizedFor(id)) {
+    if ((id === 'interviewer' || id === 'admin' || id === 'callcenter') && !isAuthorizedFor(id)) {
       pendingAuthTab = id;
       src = LOGIN_SRC;
     } else if (id === 'inquiry') {

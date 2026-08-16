@@ -45,6 +45,11 @@
   .date-block .dh .dlabel{font-size:13px; font-weight:350; color:var(--ink);}
   .date-block .dh .remove{font-size:11px; color:var(--gray-light); cursor:pointer; font-weight:350;}
   .date-block .dtime{font-size:12.5px; color:var(--teal); font-weight:400; line-height:1.6;}
+  .slot-row{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--border);}
+  .slot-row:first-child{border-top:0;}
+  .slot-toggle{border:1.5px solid var(--border); background:#fff; border-radius:10px; padding:8px 10px; font:inherit; font-size:12px; color:var(--gray); cursor:pointer; text-align:left;}
+  .slot-toggle.on{background:var(--ink); border-color:var(--ink); color:#fff;}
+  .capacity{width:72px !important; padding:8px 9px !important; text-align:center;}
   .empty-note{font-size:12px; color:var(--gray-light); background:var(--light-gray); border-radius:13px; padding:14px; text-align:center;}
   .summary-title{font-size:12.5px; font-weight:350; margin:20px 0 8px;}
   .summary-chips{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:20px;}
@@ -100,15 +105,15 @@
         </div>
       </div>
       <div class="field">
-        <label>하루 인터뷰 가능횟수</label>
+        <label>시간대별 기본 처리 인원</label>
         <div class="input-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20v-10M18 20v-16"/></svg>
-          <input type="number" id="ivMaxDay" placeholder="예: 4" min="1" max="10">
+          <input type="number" id="ivMaxDay" placeholder="예: 3" min="1" max="20" value="3">
         </div>
       </div>
     </div>
     <div class="sec-title">가능한 날짜 고르기 (여러 날 고르실 수 있습니다)</div>
-    <div class="sec-note">인터뷰가 가능한 날짜를 모두 눌러주십시오. 날짜를 누르면 그 날 진행 가능한 시간이 아래에 안내됩니다.</div>
+    <div class="sec-note">인터뷰가 가능한 날짜를 모두 눌러주십시오. 날짜별 실제 시간대와 처리 가능 인원을 아래에서 조정할 수 있습니다.</div>
 
     <div class="cal-head">
       <div class="mo" id="calMonthLabel">2026년 10월</div>
@@ -156,6 +161,7 @@
   const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
   const availability = {};
+  const capacities = {};
   const dowNames = ['일','월','화','수','목','금','토'];
 
   function pad(n){ return n<10 ? '0'+n : ''+n; }
@@ -180,10 +186,12 @@
     if(chosenDates.has(dstr)){
       chosenDates.delete(dstr);
       delete availability[dstr];
+      Object.keys(capacities).forEach(function(k){ if(k.indexOf(dstr+' ')===0) delete capacities[k]; });
     } else {
       chosenDates.add(dstr);
       // 날짜를 고르면 그 요일에 정해진 시간대를 자동으로 모두 가능시간에 포함
       availability[dstr] = new Set(CAStore.blockRangeForDate(dstr).map(b=>b.start));
+      CAStore.blockRangeForDate(dstr).forEach(function(b){ capacities[dstr+' '+b.start]=Number(document.getElementById('ivMaxDay').value)||3; });
     }
     renderCalendar();
     renderDateBlocks();
@@ -204,10 +212,14 @@
     }
     el.innerHTML = dates.map(dstr=>{
       const blocks = CAStore.blockRangeForDate(dstr);
-      const rangeText = blocks.map(b=>b.range).join(' · ');
+      const rows = blocks.map(function(b){
+        const key=dstr+' '+b.start, on=availability[dstr].has(b.start);
+        return '<div class="slot-row"><button type="button" class="slot-toggle'+(on?' on':'')+'" onclick="toggleTime(\''+dstr+'\',\''+b.start+'\')">'+b.range+'</button>'+
+          '<label style="font-size:11px;color:var(--gray)">처리 <input class="capacity" type="number" min="1" max="20" value="'+(capacities[key]||3)+'" onchange="setCapacity(\''+key+'\',this.value)">명</label></div>';
+      }).join('');
       return '<div class="date-block">'+
         '<div class="dh"><div class="dlabel">'+fmtDate(dstr)+'</div><div class="remove" onclick="toggleDate(\''+dstr+'\')">이 날 빼기</div></div>'+
-        '<div class="dtime">'+rangeText+' 사이 인터뷰가 진행됩니다.</div></div>';
+        '<div>'+rows+'</div></div>';
     }).join('');
   }
 
@@ -217,6 +229,8 @@
     renderDateBlocks();
     renderSummary();
   }
+
+  function setCapacity(key, value){ capacities[key]=Math.max(1, Math.min(20, Number(value)||1)); }
 
   function renderSummary(){
     const el = document.getElementById('summaryChips');
@@ -244,14 +258,16 @@
       alert('인터뷰어 코드를 다시 확인해 주십시오. 예: INT-2027-01');
       return;
     }
-    const maxDay = Number(document.getElementById('ivMaxDay').value) || 99;
+    const defaultCapacity = Number(document.getElementById('ivMaxDay').value) || 3;
 
     const dates = Object.keys(availability).sort();
     const times = [];
     dates.forEach(function(d){ Array.from(availability[d]).sort().forEach(function(t){ times.push(d+' '+t); }); });
 
     const state = CAStore.load();
-    state.availability.push({ interviewerCode, maxDay, times, at: CAStore.nowLabel() });
+    const row={ interviewerCode, maxDay: defaultCapacity, defaultCapacity, capacities, times, source:'인터뷰어 직접 제출', at: CAStore.nowLabel() };
+    const existing=state.availability.find(function(a){ return a.interviewerCode===interviewerCode; });
+    if(existing) Object.assign(existing,row); else state.availability.push(row);
     CAStore.addLog(state, CAStore.maskCode(interviewerCode)+' 인터뷰어 코드로 '+dates.length+'개 날짜 · '+times.length+'개 시간대가 제출되었습니다.');
     CAStore.save(state);
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="robots" content="noindex,nofollow">
+<title>콜센터 문의 처리</title>
+<link rel="stylesheet" href="../../assets/augen.css">
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:var(--font,'Malgun Gothic',sans-serif);background:var(--canvas);color:var(--ink)}
+.wrap{max-width:980px;margin:auto;padding:24px 16px 70px}.notice{background:#fff7d6;border:1px solid #e8cf6b;border-radius:14px;padding:12px 14px;font-size:12px;margin-bottom:16px}
+.card{background:#fff;border:.5px solid var(--hair);border-radius:18px;padding:16px;margin-bottom:12px}.top{display:flex;justify-content:space-between;gap:10px}.meta{font-size:11px;color:var(--ash)}
+.body{font-size:13px;margin:10px 0}.badge{font-size:10px;background:var(--blue-wash);color:var(--blue);padding:3px 8px;border-radius:999px}
+textarea{width:100%;min-height:72px;border:1px solid var(--hair);border-radius:12px;padding:10px;font:inherit;font-size:12px}.actions{display:flex;gap:8px;margin-top:8px}
+button{border:0;border-radius:999px;padding:9px 14px;font:inherit;font-size:11px;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{background:var(--canvas);color:var(--ink)}
+.empty{text-align:center;color:var(--ash);padding:40px;font-size:12px}
+</style></head>
+<body>
+<script src="../assets/nav.js"></script><script src="../assets/auth.js"></script>
+<div class="topbar"><div class="brand"><div><h1>콜센터 문의 처리</h1><div class="sub">문의·FAQ만 처리하며 자원봉사자 명단과 배정표에는 접근할 수 없습니다</div></div></div><div class="tag">SAMPLE</div></div>
+<div class="wrap"><div class="notice"><b>개인정보 최소화 원칙</b><br>문의에 이름·회중·연락처·건강 정보가 포함된 것으로 보이면 답변하지 말고 VM 운영 관리자에게 제한 검토를 요청하십시오. 답변 완료 문자는 답변 내용 없이 앱 주소만 안내합니다.</div><div id="list"></div></div>
+<script src="../assets/store.js"></script>
+<script>
+(function(){try{if(top===self){var s=CAAuth.getSession();if(!s||['helpdesk','admin','system'].indexOf(s.role)<0)location.href='00-login.html';}}catch(e){}})();
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function render(){var st=CAStore.load(), rows=st.helpdesk||[], el=document.getElementById('list');if(!rows.length){el.innerHTML='<div class="empty">접수된 문의가 없습니다.</div>';return}el.innerHTML=rows.map(function(h){return '<div class="card"><div class="top"><div><span class="badge">'+esc(h.type)+'</span> <b>'+esc(CAStore.maskCode(h.reservationCode))+'</b></div><span class="meta">'+esc(h.status||'접수')+' · '+esc(h.at)+'</span></div><div class="body">'+esc(h.body||'추가 설명 없음')+'</div><textarea id="a_'+h.id+'" placeholder="예약코드 사용자가 앱에서 확인할 답변">'+esc(h.answer||'')+'</textarea><div class="actions"><button class="secondary" onclick="saveAnswer(\''+h.id+'\',\'처리 중\')">처리 중 저장</button><button class="primary" onclick="saveAnswer(\''+h.id+'\',\'답변 완료\')">답변 완료</button></div></div>'}).join('')}
+function saveAnswer(id,status){var st=CAStore.load(),h=st.helpdesk.find(function(x){return x.id===id});if(!h)return;h.answer=document.getElementById('a_'+id).value.trim();h.status=status;h.answeredAt=CAStore.nowLabel();CAStore.addLog(st,'문의 '+CAStore.maskCode(h.reservationCode)+' 상태를 '+status+'로 변경했습니다.');CAStore.save(st);render();if(status==='답변 완료')alert('답변이 등록되었습니다. 실제 운영에서는 답변 내용 없이 앱 주소 안내 문자 발송 대상으로 표시합니다.')}
+render();
+</script></body></html>

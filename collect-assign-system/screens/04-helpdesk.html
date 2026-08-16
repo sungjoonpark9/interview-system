@@ -70,6 +70,7 @@
 
 <div class="wrap">
   
+  <div class="bubble"><span class="ic">ⓘ</span><div><b>먼저 FAQ를 확인해 주세요.</b><br>FAQ에 없는 내용만 문의해 주십시오. 이름·회중·연락처·이메일·건강 정보는 입력하지 마십시오. <a href="05-faq.html">FAQ 보기 →</a></div></div>
   <div class="card" id="formCard">
     <div class="field">
       <label>문의 유형</label>
@@ -80,8 +81,8 @@
       <input type="text" id="hdCode" placeholder="예: VM27-A7K9-P2Q4" maxlength="14" autocomplete="off" style="text-transform:uppercase">
     </div>
     <div class="field">
-      <label>문의 내용<span class="req">*</span></label>
-      <textarea id="hdBody" placeholder="궁금하신 내용을 적어 주세요. 이름·회중·전화번호·이메일 등 개인정보는 입력하지 마십시오."></textarea>
+      <label>추가 설명 (선택)</label>
+      <textarea id="hdBody" maxlength="200" placeholder="선택한 유형만으로 설명하기 어려운 경우에만 200자 이내로 적어 주세요. 개인정보·민감정보는 입력하지 마십시오."></textarea>
     </div>
     <button class="btn-submit" onclick="submitHelp()">문의 보내기</button>
   </div>
@@ -91,11 +92,12 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <h3>문의가 접수되었습니다</h3>
-    <p>담당자가 예약코드를 기준으로 확인한 뒤 승인된 별도 채널로 안내드립니다.</p>
+    <p>담당자가 답변하면 같은 예약코드로 이 화면에서 확인할 수 있습니다. 문자에는 답변 내용이 아니라 답변 등록 사실과 앱 주소만 안내합니다.</p>
   </div>
 
   <div class="list-panel">
-    <h3>최근 문의 (데모용 — 실제로는 담당자만 볼 수 있습니다)</h3>
+    <h3>내 문의·답변 확인</h3>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="lookupCode" placeholder="예약코드 입력" style="flex:1;text-transform:uppercase"><button class="type-opt selected" onclick="renderList()">확인</button></div>
     <div id="hdList"></div>
   </div>
 
@@ -104,7 +106,7 @@
 
 <script src="../assets/store.js"></script>
 <script>
-  var TYPES = ["일정 변경 문의", "배정 결과 문의", "기술 문제", "기타"];
+  var TYPES = ["일정 변경", "배정 결과", "앱 사용 방법", "예약코드 문제", "FAQ에 없는 문의"];
   var selectedType = TYPES[0];
 
   function renderTypes(){
@@ -118,14 +120,18 @@
 
   function renderList(){
     var state = CAStore.load();
+    var lookup=(document.getElementById('lookupCode').value||'').trim().toUpperCase();
     var el = document.getElementById('hdList');
-    if(!state.helpdesk || state.helpdesk.length===0){
-      el.innerHTML = '<div class="empty-note">아직 접수된 문의가 없습니다.</div>';
+    if(!lookup){ el.innerHTML='<div class="empty-note">예약코드를 입력하면 해당 코드로 접수한 문의와 답변만 표시됩니다.</div>'; return; }
+    var mine=(state.helpdesk||[]).filter(function(h){ return h.reservationCode===lookup; });
+    if(mine.length===0){
+      el.innerHTML = '<div class="empty-note">이 예약코드로 접수된 문의가 없습니다.</div>';
       return;
     }
-    el.innerHTML = state.helpdesk.slice(0,8).map(function(h){
+    el.innerHTML = mine.map(function(h){
       return '<div class="li"><div class="top"><span class="tag2">'+esc(h.type)+'</span><span class="t">'+esc(h.at)+'</span></div>'+
-        '<div class="body">'+esc(CAStore.maskCode(h.reservationCode))+' · '+esc(h.body)+'</div></div>';
+        '<div class="body"><b>'+esc(h.status||'접수')+'</b> · '+esc(h.body||'추가 설명 없음')+'</div>'+
+        (h.answer?'<div class="body" style="margin-top:6px;color:var(--ink)"><b>답변</b> '+esc(h.answer)+'</div>':'')+'</div>';
     }).join('');
   }
 
@@ -133,17 +139,18 @@
     var reservationCode = (document.getElementById('hdCode').value||'').trim().toUpperCase();
     var body = (document.getElementById('hdBody').value||'').trim();
     if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(reservationCode)){ alert('예약코드를 다시 확인해 주십시오.'); return; }
-    if(!body){ alert('문의 내용을 입력해 주세요.'); return; }
+    var pii=/\b01[016789][- ]?\d{3,4}[- ]?\d{4}\b|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:서울|경기|인천|부산|대구|광주|대전|울산).{0,12}회중/gi;
+    if(pii.test(body)){ alert('전화번호·이메일·회중 등 개인정보로 보이는 내용이 있습니다. 해당 내용을 삭제한 뒤 다시 제출해 주십시오.'); return; }
 
     var state = CAStore.load();
     if(!state.helpdesk) state.helpdesk = [];
-    state.helpdesk.unshift({ type: selectedType, reservationCode: reservationCode, body: body, at: CAStore.nowLabel() });
+    state.helpdesk.unshift({ id:'H-'+Date.now(), type: selectedType, reservationCode: reservationCode, body: body, status:'접수', answer:'', at: CAStore.nowLabel() });
     CAStore.addLog(state, CAStore.maskCode(reservationCode)+' 코드로 "'+selectedType+'" 문의가 접수되었습니다.');
     CAStore.save(state);
 
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
-    renderList();
+    document.getElementById('lookupCode').value=reservationCode; renderList();
   }
 
   renderTypes();
