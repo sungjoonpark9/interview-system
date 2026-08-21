@@ -25,6 +25,12 @@
   .resetbtn:hover{border-color:var(--gray);}
   .lastrun{font-size:11.5px; color:var(--gray-light);}
   .runresult{display:none; background:var(--pale-teal); color:var(--teal); border-radius:13px; padding:10px 16px; font-size:12.5px; margin-bottom:16px; align-items:center; gap:8px;}
+  .status-guide{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:16px;}
+  .status-guide-title{font-size:11.5px;font-weight:500;margin-bottom:7px;}
+  .status-guide-list{display:flex;flex-wrap:wrap;gap:7px 13px;font-size:10.5px;color:var(--gray);line-height:1.5;}
+  .status-guide-list span{display:inline-flex;align-items:center;gap:5px;}
+  .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none;}
+  .status-dot.ok{background:var(--ok)} .status-dot.warn{background:var(--warn)} .status-dot.full{background:#b5432b} .status-dot.idle{background:var(--gray-light)}
   .tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
   .tab-btn{background:var(--surface); border:1.5px solid var(--border); border-radius:9999px; padding:10px 16px; font-size:12.5px; font-weight:400; color:var(--gray); cursor:pointer; transition:0.12s;}
   .tab-btn:hover{border-color:var(--gray-light);}
@@ -58,6 +64,56 @@
   .bubble ol{margin:6px 0 0 16px; padding:0;}
   .bubble li{margin-bottom:3px;}
   .bubble.small{font-size:11.5px; margin:0 0 12px;}
+
+  /* ---- 반응형 관리자 워크북 ---- */
+  @media (min-width:900px){
+    .wrap{max-width:1180px; padding:28px 24px 80px;}
+    .toolbar{align-items:flex-start;}
+    .status-guide{padding:14px 16px;}
+    .sheet{padding:8px;}
+    table{font-size:13px;}
+  }
+
+  @media (max-width:720px){
+    .wrap{padding:18px 12px 64px;}
+    .toolbar{display:block;}
+    .toolbar-left{display:grid; grid-template-columns:1fr; gap:8px;}
+    .toolbar-left .runbtn,
+    .toolbar-left .resetbtn,
+    .toolbar > .resetbtn{width:100%; justify-content:center; text-align:center;}
+    .toolbar > .resetbtn{margin-top:8px;}
+    .lastrun{display:block; padding:2px 4px 4px;}
+    .status-guide-list{display:grid; grid-template-columns:1fr; gap:7px;}
+    .tabs{flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; margin-left:-2px; margin-right:-2px; scrollbar-width:thin;}
+    .tab-btn{flex:0 0 auto; white-space:nowrap; padding:9px 13px;}
+    .sheet{background:transparent; border:0; padding:0; overflow:visible;}
+    table{display:block; min-width:0; width:100%; font-size:12.5px;}
+    thead{display:none;}
+    tbody{display:block;}
+    tbody tr{
+      display:block; background:var(--surface); border:.5px solid var(--hair);
+      border-radius:16px; padding:8px 12px; margin:0 0 10px;
+      box-shadow:0 1px 0 rgba(0,0,0,.02);
+    }
+    tbody td{
+      display:grid; grid-template-columns:minmax(92px, 38%) 1fr; gap:10px;
+      align-items:start; padding:8px 2px; border-bottom:1px solid var(--border);
+      white-space:normal; overflow-wrap:anywhere; line-height:1.45;
+    }
+    tbody td:last-child{border-bottom:0;}
+    tbody td::before{
+      content:attr(data-label); color:var(--gray); font-size:10.5px; font-weight:500;
+    }
+    .empty-row{padding:0;}
+    .empty-row td{
+      display:block; text-align:center; padding:24px 10px; color:var(--gray-light);
+    }
+    .empty-row td::before{content:none;}
+    .pill{white-space:nowrap;}
+    .log-item{display:block;}
+    .log-item .t{display:block; margin-top:3px;}
+    .footer-tag{line-height:1.6;}
+  }
 </style>
 </head>
 <body>
@@ -95,6 +151,18 @@
 
   
   <div class="runresult" id="runResult"></div>
+
+  <div class="status-guide" aria-label="상태 설명">
+    <div class="status-guide-title">상태 안내</div>
+    <div class="status-guide-list">
+      <span><i class="status-dot ok"></i><b>모집중</b> 배정 가능한 정원이 충분합니다</span>
+      <span><i class="status-dot warn"></i><b>마감임박</b> 남은 정원이 많지 않습니다</span>
+      <span><i class="status-dot full"></i><b>마감</b> 현재 정원이 모두 찼습니다</span>
+      <span><i class="status-dot idle"></i><b>배정대기</b> 아직 배정 실행 전이거나 검토 중입니다</span>
+      <span><i class="status-dot ok"></i><b>배정완료</b> 인터뷰 일정이 배정되었습니다</span>
+      <span><i class="status-dot warn"></i><b>수동조율필요</b> 자동배정이 어려워 관리자의 확인이 필요합니다</span>
+    </div>
+  </div>
 
   <div class="tabs" id="tabs">
     <button class="tab-btn active" data-tab="slots" onclick="switchTab('slots')">①슬롯마스터<span class="cnt" id="cntSlots">0</span></button>
@@ -180,6 +248,20 @@
 
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
+  function applyResponsiveLabels(){
+    document.querySelectorAll('.sheet table').forEach(function(table){
+      var headers = Array.from(table.querySelectorAll('thead th')).map(function(th){
+        return th.textContent.trim();
+      });
+      table.querySelectorAll('tbody tr').forEach(function(tr){
+        if(tr.classList.contains('empty-row')) return;
+        Array.from(tr.children).forEach(function(td, idx){
+          if(td.tagName === 'TD') td.setAttribute('data-label', headers[idx] || '');
+        });
+      });
+    });
+  }
+
   function render(){
     var state = CAStore.load();
 
@@ -262,6 +344,8 @@
         return '<div class="log-item"><span>'+esc(l.msg)+'</span><span class="t">'+esc(l.at)+'</span></div>';
       }).join('');
     }
+
+    applyResponsiveLabels();
   }
 
   function runAssignment(){

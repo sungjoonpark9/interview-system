@@ -27,6 +27,12 @@
   .btn{width:100%; -webkit-appearance:none; appearance:none; background:var(--ink,#0f1012); background-color:var(--ink,#0f1012); color:#ffffff !important; border:none; box-shadow:none; -webkit-text-fill-color:#ffffff; border-radius:9999px; padding:12px; font-size:13.5px; font-weight:400; cursor:pointer; font-family:inherit;}
   .btn:hover{background:#000;}
   .note{margin-top:14px; font-size:10.5px; color:var(--ash); line-height:1.6; background:var(--canvas); border-radius:12px; padding:10px 12px;}
+  .pledge{display:none;margin:0 0 12px;background:#fff8e6;border:1px solid #ead59a;border-radius:13px;padding:11px 12px;color:var(--steel);font-size:11px;line-height:1.55;}
+  .pledge.show{display:block;}
+  .pledge-title{font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .pledge label{display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;color:var(--ink);cursor:pointer;}
+  .pledge input{margin-top:2px;flex:none;}
+  .btn:disabled{opacity:.42;cursor:not-allowed;}
   .foot{margin-top:18px; padding-top:14px; border-top:0.5px solid var(--hair); font-size:11.5px; color:var(--ash); text-align:center; line-height:1.7;}
   .foot a{color:var(--blue); text-decoration:none;}
 </style>
@@ -42,7 +48,14 @@
   <label for="codeInput" id="codeLabel">운영 코드</label>
   <input type="text" id="codeInput" placeholder="예: INT-2027-01" autocomplete="off">
   <div class="err" id="errMsg"></div>
-  <button class="btn" onclick="doLogin()">로그인</button>
+
+  <div class="pledge" id="callcenterPledge">
+    <div class="pledge-title">콜센터 자원봉사자 약식 서약</div>
+    <div>업무 중 알게 된 정보는 문의 처리 목적에만 사용하고 외부에 공유하지 않으며, 개인정보 최소화 원칙과 콜센터 운영 지침을 준수하겠습니다.</div>
+    <label><input type="checkbox" id="pledgeCheck" onchange="syncLoginButton()"><span>위 내용을 확인했으며 준수하겠습니다.</span></label>
+  </div>
+
+  <button class="btn" id="loginBtn" onclick="doLogin()">로그인</button>
 
   <div class="note" id="sampleCodes">샘플 코드<br>인터뷰어: INT-2027-01<br>콜센터: CALL-2027-01<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27</div>
 
@@ -66,6 +79,18 @@
     document.getElementById('codeInput').placeholder=cfg.placeholder;
     document.getElementById('sampleCodes').innerHTML=cfg.sample;
   }
+  if(target==='callcenter'){
+    document.getElementById('callcenterPledge').classList.add('show');
+  }
+  function syncLoginButton(){
+    var btn=document.getElementById('loginBtn');
+    if(target==='callcenter'){
+      btn.disabled=!document.getElementById('pledgeCheck').checked;
+    } else {
+      btn.disabled=false;
+    }
+  }
+  syncLoginButton();
   function embedded(){
     try { return window.parent && window.parent !== window; } catch (e) { return false; }
   }
@@ -79,6 +104,10 @@
   }
 
   function doLogin(){
+    if(target==='callcenter' && !document.getElementById('pledgeCheck').checked){
+      document.getElementById('errMsg').textContent = '약식 서약 내용을 확인하고 체크해 주세요.';
+      return;
+    }
     var code = document.getElementById('codeInput').value;
     var session = CAAuth.login(code);
     if (!session) {

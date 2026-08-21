@@ -22,24 +22,44 @@
     min-height:100vh; min-height:100dvh; padding:0;
   }
 
-  /* ---- 데스크탑에서는 폰 프레임으로 감싸 "앱" 느낌을 주고, 모바일에서는 전체 화면으로 채움 ---- */
+  /* ---- 반응형 앱 셸 ----
+     모바일: 전체 화면
+     태블릿: 넓어진 앱 화면
+     PC: 휴대폰 프레임을 제거하고 관리 화면이 충분히 넓게 보이도록 확장
+  ---- */
   .device{
-    position:relative; width:100%; height:100dvh; max-width:430px; max-height:100dvh;
+    position:relative; width:100%; height:100dvh; max-width:none; max-height:none;
     background:var(--canvas); display:flex; flex-direction:column; overflow:hidden;
   }
+
   @media (min-width:640px){
-    body{ padding:36px 16px; }
+    body{ padding:18px; }
     .device{
-      height:min(860px, calc(100vh - 72px)); border-radius:44px; border:10px solid #1c1c1e;
-      box-shadow:0 30px 70px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06);
+      width:min(820px, 100%);
+      height:calc(100dvh - 36px);
+      border-radius:24px;
+      border:1px solid rgba(0,0,0,0.08);
+      box-shadow:0 18px 48px rgba(0,0,0,0.16);
     }
-    .device::before{
-      content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
-      width:120px; height:26px; background:#1c1c1e; border-radius:0 0 16px 16px; z-index:30;
+  }
+
+  @media (min-width:900px){
+    body{ padding:24px; }
+    .device{
+      width:min(1280px, 100%);
+      height:calc(100dvh - 48px);
+      border-radius:22px;
+      border:1px solid rgba(0,0,0,0.09);
+      box-shadow:0 20px 55px rgba(0,0,0,0.14);
     }
-    /* 데스크탑 목업 프레임에서는 실제 세이프에어리어가 0이라 위 padding만으로는
-       노치를 못 피하므로, 목업일 때만 앱바 위쪽 여백을 노치 높이만큼 더 확보합니다. */
-    .appbar{ padding-top:32px; }
+    .appbar{ padding:14px 24px 12px; }
+    .sessionbar{ padding-left:24px; padding-right:24px; }
+    .segrow{ padding-left:24px; padding-right:24px; max-width:760px; }
+    .tabbar{ padding-left:18px; padding-right:18px; }
+    .tab{ flex-direction:row; justify-content:center; gap:7px; padding:9px 8px; }
+    .tab svg{ width:19px; height:19px; }
+    .tab span{ font-size:11px; }
+    .resetfab{ right:18px; }
   }
 
   /* ---- 상단 앱바 ---- */
@@ -68,10 +88,12 @@
   }
   .sessionbar.show{ display:flex; }
   .sessionbar b{ font-weight:500; }
+  .sessionbar .session-actions{display:flex; align-items:center; gap:12px; flex-shrink:0;}
   .sessionbar button{
     border:none; background:none; color:var(--blue); font-family:inherit; font-size:11px;
     font-weight:500; cursor:pointer; padding:2px 0;
   }
+  .sessionbar .homebtn{color:var(--ink);}
 
   /* ---- 문의 탭 전용 세그먼트 컨트롤 ---- */
   .segrow{ display:none; padding:10px 14px 0; gap:8px; background:var(--canvas); flex-shrink:0; }
@@ -128,7 +150,10 @@
 
   <div class="sessionbar" id="sessionbar">
     <span id="sessionLabel"></span>
-    <button onclick="doLogout()">로그아웃</button>
+    <div class="session-actions">
+      <button class="homebtn" onclick="setTab('home')" aria-label="홈으로 이동">홈</button>
+      <button onclick="doLogout()">로그아웃</button>
+    </div>
   </div>
 
   <div class="segrow" id="inquirySeg">
@@ -208,11 +233,11 @@
   }
 
   function allowedTabIds(){
-    if (session && session.role === 'volunteer') return ['applicant', 'inquiry'];
-    if (session && session.role === 'interviewer') return ['interviewer', 'inquiry'];
-    if (session && session.role === 'helpdesk') return ['callcenter', 'inquiry'];
-    if (session && session.role === 'admin') return ['admin', 'inquiry'];
-    if (session && session.role === 'system') return ['admin', 'callcenter', 'inquiry'];
+    if (session && session.role === 'volunteer') return ['home', 'applicant', 'inquiry'];
+    if (session && session.role === 'interviewer') return ['home', 'interviewer', 'inquiry'];
+    if (session && session.role === 'helpdesk') return ['home', 'callcenter', 'inquiry'];
+    if (session && session.role === 'admin') return ['home', 'admin', 'inquiry'];
+    if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
     // 관리자 로그인 상태이거나 비로그인(자원봉사자) 상태에서는 모든 탭 버튼이 보입니다.
     // 비로그인 상태에서 인터뷰어·관리자 탭을 누르면 로그인 화면으로 안내됩니다.
     return ['home', 'applicant', 'interviewer', 'admin', 'callcenter', 'inquiry'];
@@ -328,7 +353,7 @@
   function loadFrame(src){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260817a';
+    src = src + join + 'v=20260821b';
     if (f.getAttribute('src') === src) return;
     showLoading();
     f.setAttribute('src', src);
