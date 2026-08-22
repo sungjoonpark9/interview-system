@@ -344,9 +344,16 @@
 
   function showLoading(){
     var l = document.getElementById('loading');
+    if(!l) return;
     l.classList.add('show');
     clearTimeout(showLoading._t);
-    showLoading._t = setTimeout(function(){ l.classList.remove('show'); }, 500);
+    showLoading._t = setTimeout(hideLoading, 4000);
+  }
+
+  function hideLoading(){
+    var l = document.getElementById('loading');
+    if(l) l.classList.remove('show');
+    clearTimeout(showLoading._t);
   }
 
   function setTab(id, forceReload){
@@ -386,7 +393,7 @@
   function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260822e';
+    src = src + join + 'v=20260822f';
     if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
     if (forceReload) {
@@ -412,6 +419,11 @@
   }
 
   (function init(){
+    var frame=document.getElementById('frame');
+    if(frame){
+      frame.addEventListener('load', hideLoading);
+      frame.addEventListener('error', hideLoading);
+    }
     loadSessionFromStorage();
     updateTabVisibility();
     updateSessionBar();

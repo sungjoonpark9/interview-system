@@ -328,7 +328,7 @@
     var tH = document.getElementById('tbodyHelpdesk');
     var helpdesk = state.helpdesk || [];
     if(helpdesk.length===0){
-      tH.innerHTML = '<tr class="empty-row"><td colspan="6">아직 접수된 문의가 없습니다.</td></tr>';
+      tH.innerHTML = '<tr class="empty-row"><td colspan="6">아직 현재 처리할 문의가 없습니다. 새 문의가 접수되면 이곳에 표시됩니다.</td></tr>';
     } else {
       tH.innerHTML = helpdesk.map(function(h){
         return '<tr><td>'+esc(h.type)+'</td><td>'+esc(CAStore.maskCode(h.reservationCode))+'</td><td>'+statusPill(h.status||'접수')+'</td><td>'+esc(h.body||'-')+'</td><td>'+esc(h.answer||'-')+'</td><td>'+esc(h.at)+'</td></tr>';
