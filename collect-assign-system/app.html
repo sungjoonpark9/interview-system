@@ -252,8 +252,10 @@
      - 자원봉사자(비로그인): 홈 · 자원봉사자 · 도움말(공지사항/문의하기/FAQ) 이용.
        인터뷰어·관리자 탭을 눌러도 실제 화면 대신 로그인 화면이 뜨고,
        로그인 전에는 인터뷰어·관리자 화면 내용을 볼 수 없습니다.
+     - 로그인 전 홈: 역할 선택 화면.
+     - 로그인 후 홈: 현재 로그인 역할의 전용 홈(대시보드).
      - 인터뷰어(로그인): 인터뷰어 · 공지·FAQ·문의를 이용.
-     - VM 관리자(로그인): 모든 탭 이용 가능.
+     - VM 관리자(로그인): 관리자 권한 범위의 메뉴를 이용.
   --------------------------------------------------------------- */
   function isAuthorizedFor(id){
     if (id === 'interviewer') return !!session && (session.role === 'interviewer' || session.role === 'admin');
@@ -383,7 +385,7 @@
   function loadFrame(src){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260822c';
+    src = src + join + 'v=20260822d';
     if (f.getAttribute('src') === src) return;
     showLoading();
     f.setAttribute('src', src);
