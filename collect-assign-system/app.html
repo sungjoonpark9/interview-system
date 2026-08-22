@@ -164,6 +164,12 @@
     .device.mode-admin{ width:min(1160px, calc(100vw - 48px)); }
   }
 
+
+@media (min-width:900px){
+  .device.mode-general{width:min(1080px,calc(100vw - 48px));}
+  .device.mode-interviewer,.device.mode-callcenter{width:min(1080px,calc(100vw - 48px));}
+  .device.mode-admin{width:min(1180px,calc(100vw - 48px));}
+}
 </style>
 </head>
 <body>
@@ -356,8 +362,19 @@
     clearTimeout(showLoading._t);
   }
 
+  function setShellMode(id){
+    var d=document.querySelector('.device');
+    if(!d) return;
+    d.classList.remove('mode-general','mode-interviewer','mode-admin','mode-callcenter');
+    if(id==='admin') d.classList.add('mode-admin');
+    else if(id==='interviewer') d.classList.add('mode-interviewer');
+    else if(id==='callcenter') d.classList.add('mode-callcenter');
+    else d.classList.add('mode-general');
+  }
+
   function setTab(id, forceReload){
-    // 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
+        setShellMode(id);
+// 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
     if (session && allowedTabIds().indexOf(id) === -1) {
       id = defaultTabForRole();
     }
@@ -393,7 +410,7 @@
   function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260822f';
+    src = src + join + 'v=20260822g';
     if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
     if (forceReload) {
