@@ -319,10 +319,11 @@
   function doLogout(){
     try { if (window.CAAuth) CAAuth.logout(); } catch (e) {}
     session = null;
+    pendingAuthTab = null;
     updateTabVisibility();
     updateSessionBar();
     updateInquirySegments();
-    setTab('home');
+    setTab('home', true);  // 로그인 전 홈으로 강제 새로고침
   }
 
   // 로그인 화면(iframe 안)에서 로그인에 성공하면 이 함수를 호출합니다.
@@ -348,7 +349,7 @@
     showLoading._t = setTimeout(function(){ l.classList.remove('show'); }, 500);
   }
 
-  function setTab(id){
+  function setTab(id, forceReload){
     // 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
     if (session && allowedTabIds().indexOf(id) === -1) {
       id = defaultTabForRole();
@@ -371,7 +372,7 @@
     } else {
       src = SCREENS[id].src;
     }
-    loadFrame(src);
+    loadFrame(src, !!forceReload);
   }
 
   function setInquiry(which){
@@ -382,12 +383,15 @@
     loadFrame(which === 'notice' ? 'screens/07-notices.html' : which === 'faq' ? 'screens/05-faq.html' : 'screens/04-helpdesk.html');
   }
 
-  function loadFrame(src){
+  function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260822d';
-    if (f.getAttribute('src') === src) return;
+    src = src + join + 'v=20260822e';
+    if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
+    if (forceReload) {
+      src += '&r=' + Date.now();
+    }
     f.setAttribute('src', src);
   }
 
