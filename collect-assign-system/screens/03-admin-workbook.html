@@ -169,7 +169,7 @@
     <button class="tab-btn" data-tab="avail" onclick="switchTab('avail')">②인터뷰어가용시간<span class="cnt" id="cntAvail">0</span></button>
     <button class="tab-btn" data-tab="applicant" onclick="switchTab('applicant')">③자원봉사자접수<span class="cnt" id="cntApplicant">0</span></button>
     <button class="tab-btn" data-tab="result" onclick="switchTab('result')">④배정결과<span class="cnt" id="cntResult">0</span></button>
-    <button class="tab-btn" data-tab="helpdesk" onclick="switchTab('helpdesk')">⑤헬프데스크<span class="cnt" id="cntHelpdesk">0</span></button>
+    <button class="tab-btn" data-tab="helpdesk" onclick="switchTab('helpdesk')">⑤문의함<span class="cnt" id="cntHelpdesk">0</span></button>
   </div>
 
   <div class="sheet active" id="sheet-slots">
@@ -324,7 +324,7 @@
       }).join('');
     }
 
-    // 헬프데스크
+    // 문의함
     var tH = document.getElementById('tbodyHelpdesk');
     var helpdesk = state.helpdesk || [];
     if(helpdesk.length===0){
