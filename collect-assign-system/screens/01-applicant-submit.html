@@ -321,10 +321,19 @@
     const code=(document.getElementById('reservationCode').value||'').trim().toUpperCase();
     if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){ alert('예약코드를 다시 확인해 주십시오. 예: VM27-A7K9-P2Q4'); return; }
     const row=CAStore.load().applicants.find(function(r){ return r.reservationCode===code; });
-    if(row && row.slotId){ alert('배정이 확정된 항목입니다. 변경은 문의하기를 이용해 주십시오.'); return; }
     verifiedCode = code;
     var volunteerSession = CAAuth.loginVolunteer(code);
     try { if(window.parent && window.parent !== window && typeof window.parent.CA_afterVolunteerLogin === 'function') window.parent.CA_afterVolunteerLogin(volunteerSession); } catch(e) {}
+    if(row && row.slotId){
+      try{
+        if(window.parent && window.parent !== window && typeof window.parent.setTab === 'function'){
+          window.parent.setTab('volunteerAssignment');
+          return;
+        }
+      }catch(e){}
+      location.href='11-volunteer-assignment.html';
+      return;
+    }
     document.getElementById('reservationCode').value = code;
     document.getElementById('reservationCode').readOnly = true;
     document.getElementById('reservationCodeField').style.display = 'none';

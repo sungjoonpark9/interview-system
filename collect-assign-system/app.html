@@ -214,7 +214,11 @@
     </button>
     <button class="tab" data-tab="applicant" onclick="setTab('applicant')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-      <span>자원봉사자</span>
+      <span>가능시간 입력</span>
+    </button>
+    <button class="tab" data-tab="volunteerAssignment" onclick="setTab('volunteerAssignment')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>배정 확인</span>
     </button>
     <button class="tab" data-tab="interviewer" onclick="setTab('interviewer')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -244,7 +248,8 @@
 <script>
   var SCREENS = {
     home:        { title: '홈', src: 'screens/00-home.html?v=20260824-6' },
-    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-6' },
+    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-7' },
+    volunteerAssignment: { title: '배정 확인', src: 'screens/11-volunteer-assignment.html?v=20260824-7' },
     interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-6' },
     assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260824-6' },
     admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-6' },
@@ -275,8 +280,17 @@
     return true;
   }
 
+  function volunteerHasAssignment(){
+    if(!session || session.role!=='volunteer' || !session.code) return false;
+    try{
+      var state=CAStore.load();
+      var row=(state.applicants||[]).find(function(r){return r.reservationCode===session.code;});
+      return !!(row && row.slotId);
+    }catch(e){ return false; }
+  }
+
   function allowedTabIds(){
-    if (session && session.role === 'volunteer') return ['home', 'applicant', 'inquiry'];
+    if (session && session.role === 'volunteer') return volunteerHasAssignment() ? ['home','volunteerAssignment','inquiry'] : ['home','applicant','inquiry'];
     if (session && session.role === 'interviewer') return ['home', 'interviewer', 'assignment', 'inquiry'];
     if (session && session.role === 'helpdesk') return ['home', 'callcenter', 'inquiry'];
     if (session && session.role === 'admin') return ['home', 'admin', 'inquiry'];
@@ -296,7 +310,7 @@
 
   function defaultTabForRole(){
     if(!session) return 'home';
-    if(session.role==='volunteer') return 'applicant';
+    if(session.role==='volunteer') return volunteerHasAssignment() ? 'volunteerAssignment' : 'applicant';
     if(session.role==='interviewer') return 'interviewer';
     if(session.role==='helpdesk') return 'callcenter';
     if(session.role==='admin'||session.role==='system') return 'admin';
@@ -351,6 +365,7 @@
   };
   window.CA_afterVolunteerLogin = function(s){
     session=s; updateTabVisibility(); updateSessionBar(); updateInquirySegments(); updateNoticeBadge();
+    if(volunteerHasAssignment()) setTab('volunteerAssignment');
   };
 
   function showLoading(){
@@ -415,7 +430,7 @@
   function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260822g';
+    src = src + join + 'v=20260824h';
     if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
     if (forceReload) {
