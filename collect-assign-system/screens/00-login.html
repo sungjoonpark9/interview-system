@@ -27,12 +27,20 @@
   .btn{width:100%; -webkit-appearance:none; appearance:none; background:var(--ink,#0f1012); background-color:var(--ink,#0f1012); color:#ffffff !important; border:none; box-shadow:none; -webkit-text-fill-color:#ffffff; border-radius:9999px; padding:12px; font-size:13.5px; font-weight:400; cursor:pointer; font-family:inherit;}
   .btn:hover{background:#000;}
   .note{margin-top:14px; font-size:10.5px; color:var(--ash); line-height:1.6; background:var(--canvas); border-radius:12px; padding:10px 12px;}
-  .pledge{display:none;margin:0 0 12px;background:#fff8e6;border:1px solid #ead59a;border-radius:13px;padding:11px 12px;color:var(--steel);font-size:11px;line-height:1.55;}
+  .pledge{display:none;margin:4px 0 14px;background:#fff8e6;border:1px solid #ead59a;border-radius:16px;padding:15px 16px;color:var(--steel);font-size:11.5px;line-height:1.65;}
   .pledge.show{display:block;}
   .pledge-title{font-weight:600;color:var(--ink);margin-bottom:6px;}
-  .pledge label{display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;color:var(--ink);cursor:pointer;}
-  .pledge input{margin-top:2px;flex:none;}
+  .pledge label{display:flex;align-items:center;gap:10px;margin:12px 0 0;color:var(--ink);cursor:pointer;background:rgba(255,255,255,.72);border:1px solid rgba(177,137,39,.18);border-radius:11px;padding:10px 11px;}
+  .pledge input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--blue);}
   .btn:disabled{opacity:.42;cursor:not-allowed;}
+
+  .sample-actions{margin-top:14px;padding-top:14px;border-top:.5px solid var(--hair)}
+  .sample-title{font-size:10.5px;color:var(--ash);margin-bottom:8px}
+  .sample-btns{display:flex;flex-wrap:wrap;gap:7px}
+  .sample-btn{appearance:none;border:1px solid var(--hair);background:#fff;color:var(--ink);border-radius:999px;padding:7px 11px;font:inherit;font-size:11px;cursor:pointer;transition:.12s}
+  .sample-btn:hover{border-color:var(--blue);background:var(--blue-wash);color:var(--blue)}
+  .sample-hint{font-size:10px;color:var(--ash);margin-top:7px;line-height:1.5}
+
   .foot{margin-top:18px; padding-top:14px; border-top:0.5px solid var(--hair); font-size:11.5px; color:var(--ash); text-align:center; line-height:1.7;}
   .foot a{color:var(--blue); text-decoration:none;}
 
@@ -72,9 +80,13 @@
 
   <button class="btn" id="loginBtn" onclick="doLogin()">로그인</button>
 
-  <div class="note" id="sampleCodes">샘플 코드<br>인터뷰어: INT-2027-01<br>콜센터: CALL-2027-01<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27</div>
+  <div class="sample-actions" id="sampleActions">
+    <div class="sample-title">데모용 샘플 로그인</div>
+    <div class="sample-btns" id="sampleButtons"></div>
+    <div class="sample-hint" id="sampleHint">샘플 버튼을 누르면 코드가 자동으로 입력됩니다.</div>
+  </div>
 
-  <div class="foot">자원봉사자는 로그인이 필요 없습니다<br><a href="01-applicant-submit.html" onclick="return goHome()">자원봉사자 화면으로 바로 가기</a></div>
+  <div class="foot">자원봉사자는 발급받은 예약코드로 접속합니다<br><a href="01-applicant-submit.html" onclick="return goHome()">자원봉사자 코드 입력 화면으로 가기</a></div>
 </div>
 
 <script src="../assets/store.js"></script>
@@ -82,9 +94,9 @@
 <script>
   var target = new URLSearchParams(location.search).get('for') || '';
   var targetConfig = {
-    interviewer: { title:'인터뷰어 로그인', sub:'발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.', label:'인터뷰어 코드', placeholder:'예: INT-2027-01', sample:'샘플 코드<br>인터뷰어: INT-2027-01', roles:['interviewer'] },
-    admin: { title:'VM 운영 관리자 로그인', sub:'발급받은 관리자 코드로 로그인해 주십시오.', label:'관리자 코드', placeholder:'예: VM-ADMIN-27', sample:'샘플 코드<br>VM 운영 관리자: VM-ADMIN-27<br>시스템 관리자: SYS-ADMIN-27', roles:['admin','system'] },
-    callcenter: { title:'콜센터 자원봉사자 로그인', sub:'발급받은 콜센터 코드로 로그인해 주십시오.', label:'콜센터 코드', placeholder:'예: CALL-2027-01', sample:'샘플 코드<br>콜센터: CALL-2027-01', roles:['helpdesk'] }
+    interviewer: { title:'인터뷰어 로그인', sub:'발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.', label:'인터뷰어 코드', placeholder:'예: INT-2027-01', samples:[{label:'인터뷰어 01',code:'INT-2027-01'},{label:'인터뷰어 02',code:'INT-2027-02'}], roles:['interviewer'] },
+    admin: { title:'VM 운영 관리자 로그인', sub:'발급받은 관리자 코드로 로그인해 주십시오.', label:'관리자 코드', placeholder:'예: VM-ADMIN-27', samples:[{label:'VM 운영 관리자',code:'VM-ADMIN-27'},{label:'시스템 관리자',code:'SYS-ADMIN-27'}], roles:['admin','system'] },
+    callcenter: { title:'콜센터 자원봉사자 로그인', sub:'발급받은 콜센터 코드로 로그인해 주십시오.', label:'콜센터 코드', placeholder:'예: CALL-2027-01', samples:[{label:'콜센터 01',code:'CALL-2027-01'}], roles:['helpdesk'] }
   };
   var cfg = targetConfig[target];
   if(cfg){
@@ -92,11 +104,40 @@
     document.getElementById('loginSub').textContent=cfg.sub;
     document.getElementById('codeLabel').textContent=cfg.label;
     document.getElementById('codeInput').placeholder=cfg.placeholder;
-    document.getElementById('sampleCodes').innerHTML=cfg.sample;
+    renderSampleButtons(cfg.samples||[]);
   }
   if(target==='callcenter'){
     document.getElementById('callcenterPledge').classList.add('show');
   }
+  if(!cfg){
+    renderSampleButtons([
+      {label:'인터뷰어 01',code:'INT-2027-01'},
+      {label:'콜센터 01',code:'CALL-2027-01'},
+      {label:'VM 운영 관리자',code:'VM-ADMIN-27'}
+    ]);
+  }
+
+
+  function renderSampleButtons(samples){
+    var box=document.getElementById('sampleButtons');
+    if(!box) return;
+    box.innerHTML=(samples||[]).map(function(x){
+      return '<button type="button" class="sample-btn" onclick="useSampleCode(\''+x.code+'\')">'+x.label+' · '+x.code+'</button>';
+    }).join('');
+  }
+  function useSampleCode(code){
+    var input=document.getElementById('codeInput');
+    input.value=code;
+    input.focus();
+    document.getElementById('errMsg').textContent='';
+    if(target!=='callcenter'){
+      doLogin();
+    } else {
+      document.getElementById('sampleHint').textContent='콜센터는 서약 내용을 확인하고 체크한 뒤 로그인해 주세요.';
+      document.getElementById('callcenterPledge').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+  }
+
   function syncLoginButton(){
     var btn=document.getElementById('loginBtn');
     if(target==='callcenter'){

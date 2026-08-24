@@ -199,7 +199,7 @@
   </div>
 
   <div class="content">
-    <iframe id="frame" src="screens/00-home.html?v=20260824-6" title="app-content"></iframe>
+    <iframe id="frame" src="screens/00-home.html?v=20260824-10" title="app-content"></iframe>
     <div class="loading" id="loading">불러오는 중…</div>
   </div>
 
@@ -247,13 +247,13 @@
 <script src="assets/auth.js"></script>
 <script>
   var SCREENS = {
-    home:        { title: '홈', src: 'screens/00-home.html?v=20260824-6' },
-    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-9' },
+    home:        { title: '홈', src: 'screens/00-home.html?v=20260824-10' },
+    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-10' },
     volunteerAssignment: { title: '배정 확인', src: 'screens/11-volunteer-assignment.html?v=20260824-8' },
-    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-6' },
+    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-10' },
     assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260824-6' },
-    admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-6' },
-    callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html?v=20260824-6' },
+    admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-10' },
+    callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html?v=20260824-10' },
     inquiry:     { title: '도움말', src: 'screens/07-notices.html?v=20260824-6' }
   };
   var LOGIN_SRC = 'screens/00-login.html';
@@ -290,7 +290,7 @@
   }
 
   function allowedTabIds(){
-    if(!session) return ['home','inquiry'];
+    if(!session) return ['home','applicant','interviewer','admin','callcenter','inquiry'];
 
     if(session.role==='volunteer'){
       return volunteerHasAssignment()
@@ -448,7 +448,7 @@
   function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260824j';
+    src = src + join + 'v=20260824k';
     if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
     if (forceReload) {
