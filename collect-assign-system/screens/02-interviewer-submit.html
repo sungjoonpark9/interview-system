@@ -67,23 +67,6 @@
   .success p{font-size:12.5px; color:var(--gray); line-height:1.6;}
   .footer-tag{text-align:center; margin-top:16px; font-size:10.5px; color:var(--ash);}
 
-  .assign-card{margin-bottom:16px;}
-  .assign-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
-  .assign-title{font-size:14px;font-weight:500;}
-  .assign-note{font-size:11.5px;color:var(--gray-light);margin-top:4px;line-height:1.6;}
-  .assign-count{font-size:11px;font-weight:500;color:var(--blue);background:var(--pale-teal);padding:6px 10px;border-radius:9999px;white-space:nowrap;}
-  .assign-list{display:flex;flex-direction:column;gap:10px;}
-  .assign-item{border:1.5px solid var(--border);border-radius:14px;padding:13px 14px;background:#fff;cursor:pointer;transition:.14s;position:relative;padding-right:44px;}
-  .assign-item:hover{border-color:var(--blue);background:var(--pale-teal);transform:translateY(-1px);}
-  .assign-item:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--pale-teal);}
-  .assign-arrow{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:21px;color:var(--gray-light);}
-  .assign-item:hover .assign-arrow{color:var(--blue);}
-  .assign-code{font-size:13px;font-weight:500;color:var(--ink);}
-  .assign-meta{font-size:11.5px;color:var(--gray-light);margin-top:4px;line-height:1.6;}
-  .assign-status{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:11px;font-weight:500;color:var(--blue);background:var(--pale-teal);padding:5px 9px;border-radius:9999px;}
-  .assign-empty{font-size:12px;color:var(--gray-light);background:var(--light-gray);border-radius:13px;padding:14px;text-align:center;}
-  .assign-tip{margin-top:12px;font-size:11px;color:var(--gray-light);line-height:1.7;}
-
 
   .bubble{position:relative; background:#fff7d6; border:1.5px solid #e8cf6b; border-radius:16px; padding:12px 16px; font-size:12px; color:#5c4c00; line-height:1.6; margin:14px 0 22px; display:flex; gap:9px; align-items:flex-start;}
   .bubble .ic{font-size:15px; flex-shrink:0; line-height:1.3;}
@@ -124,18 +107,6 @@
 </div>
 
 <div class="wrap">
-  <div class="card assign-card" id="assignedCard">
-    <div class="assign-head">
-      <div>
-        <div class="assign-title">현재 배정된 인터뷰 대상</div>
-        <div class="assign-note">배정이 완료된 자원봉사자 예약코드와 시간을 먼저 확인할 수 있습니다. 실제 이름 등 개인정보는 이 화면에 표시하지 않습니다.</div>
-      </div>
-      <div class="assign-count" id="assignedCount">배정 0명</div>
-    </div>
-    <div id="assignedList" class="assign-list"></div>
-    <div class="assign-tip">※ 배정 대상을 누르면 해당 예약코드의 인터뷰 메모 작성 화면으로 이동합니다. 메모는 서버에 저장하지 않고 현재 브라우저 세션에서만 임시 유지됩니다.</div>
-  </div>
-
   <div class="card" id="formCard">
     <div class="intro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -212,56 +183,6 @@
   const dowNames = ['일','월','화','수','목','금','토'];
 
   function pad(n){ return n<10 ? '0'+n : ''+n; }
-
-  function getSession(){
-    try{ if(window.parent && window.parent !== window && window.parent.CAAuth){ return window.parent.CAAuth.getSession(); } }catch(e){}
-    try{ if(window.CAAuth) return CAAuth.getSession(); }catch(e){}
-    return null;
-  }
-
-  function renderAssigned(){
-    var state = CAStore.load();
-    var session = getSession();
-    var listEl = document.getElementById('assignedList');
-    var countEl = document.getElementById('assignedCount');
-    if(!listEl || !countEl) return;
-    if(!session || (session.role !== 'interviewer' && session.role !== 'admin' && session.role !== 'system')){
-      countEl.textContent = '배정 0명';
-      listEl.innerHTML = '<div class="assign-empty">로그인 후 배정된 인터뷰 대상이 있으면 이곳에 표시됩니다.</div>';
-      return;
-    }
-    var rows = (state.applicants || []).filter(function(row){
-      if(!row.slotId) return false;
-      var slot = (state.slots || []).find(function(s){ return s.id === row.slotId; });
-      if(!slot) return false;
-      if(session.role === 'admin' || session.role === 'system') return true;
-      return slot.interviewer === session.code;
-    }).map(function(row){
-      var slot = (state.slots || []).find(function(s){ return s.id === row.slotId; });
-      return { row: row, slot: slot };
-    }).sort(function(a,b){ return (a.slot.date + a.slot.time).localeCompare(b.slot.date + b.slot.time); });
-
-    countEl.textContent = '배정 ' + rows.length + '명';
-    if(!rows.length){
-      listEl.innerHTML = '<div class="assign-empty">아직 배정된 인터뷰 대상이 없습니다. 관리자 워크북에서 배정을 실행하면 이곳에 표시됩니다.</div>';
-      return;
-    }
-    listEl.innerHTML = rows.map(function(item){
-      var row = item.row, slot = item.slot;
-      var dateText = CAStore.fmtDateShort(slot.date) + ' · ' + slot.blockLabel;
-      var ivText = slot.interviewer ? '담당 인터뷰어: ' + slot.interviewer : '';
-      var code = (row.reservationCode || row.code || '-');
-      var memoUrl = '10-interviewer-memo.html?code=' + encodeURIComponent(code) + '&slot=' + encodeURIComponent(slot.id);
-      return '<div class="assign-item" role="button" tabindex="0" aria-label="'+code+' 인터뷰 메모 작성" '
-        + 'onclick="location.href=\''+memoUrl+'\'" '
-        + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();location.href=\''+memoUrl+'\';}">'
-        + '<div class="assign-code">' + code + '</div>'
-        + '<div class="assign-meta">' + dateText + '<br>' + ivText + '</div>'
-        + '<div class="assign-status">' + (row.status || '배정완료') + '</div>'
-        + '<div class="assign-arrow">›</div>'
-        + '</div>';
-    }).join('');
-  }
 
   function renderCalendar(){
     document.getElementById('calMonthLabel').textContent = viewYear + '년 ' + (viewMonth+1) + '월';
@@ -396,7 +317,6 @@
   }
 
   loadLoggedInInterviewer();
-  renderAssigned();
   renderCalendar();
   renderDateBlocks();
   renderSummary();

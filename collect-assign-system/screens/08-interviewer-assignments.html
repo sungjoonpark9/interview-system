@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>인터뷰 배정 확인</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="../../assets/augen.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font,'Pretendard Variable','Pretendard','Malgun Gothic',sans-serif);font-weight:350;letter-spacing:-.02em;background:var(--canvas);color:var(--ink);line-height:1.6;min-height:100vh;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:900px;margin:0 auto;padding:30px 24px 80px}
+.hero{background:var(--surface);border:.5px solid var(--hair);border-radius:22px;padding:24px;margin-bottom:16px}
+.hero-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.eyebrow{font-size:11px;color:var(--ash);margin-bottom:4px}
+h1{font-size:20px;font-weight:500;line-height:1.35}
+.desc{font-size:12px;color:var(--ash);margin-top:6px}
+.count{font-size:11.5px;font-weight:550;color:var(--blue);background:var(--blue-wash);padding:7px 11px;border-radius:999px;white-space:nowrap}
+.notice{background:#eaf2ff;border-radius:14px;padding:12px 14px;font-size:11.5px;color:#3d4b63;line-height:1.65;margin-top:16px}
+.card{background:var(--surface);border:.5px solid var(--hair);border-radius:22px;padding:20px}
+.group{margin-bottom:22px}
+.group:last-child{margin-bottom:0}
+.group-title{font-size:13.5px;font-weight:550;margin-bottom:9px}
+.group-sub{font-size:11px;color:var(--ash);margin-bottom:10px}
+.target-list{display:flex;flex-direction:column;gap:10px}
+.target{position:relative;border:1px solid var(--hair);background:#fff;border-radius:15px;padding:14px 46px 14px 14px;cursor:pointer;transition:.14s}
+.target:hover{border-color:var(--blue);background:var(--blue-wash);transform:translateY(-1px)}
+.target:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-wash)}
+.code{font-size:13.5px;font-weight:550;letter-spacing:.015em}
+.meta{font-size:11.5px;color:var(--ash);margin-top:4px}
+.status{display:inline-flex;margin-top:8px;font-size:10.5px;font-weight:500;color:var(--blue);background:var(--blue-wash);padding:4px 9px;border-radius:999px}
+.arrow{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--ash)}
+.target:hover .arrow{color:var(--blue)}
+.empty{font-size:12px;color:var(--ash);text-align:center;background:var(--canvas);border-radius:14px;padding:22px}
+.footer{text-align:center;font-size:10.5px;color:var(--ash);margin-top:14px}
+@media(max-width:700px){.wrap{padding:20px 14px 72px}.hero,.card{padding:18px}.hero-top{flex-direction:column}.count{align-self:flex-start}}
+</style>
+</head>
+<body>
+<script src="../assets/nav.js"></script>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">인터뷰어</div>
+        <h1>배정 확인</h1>
+        <div class="desc">나에게 배정된 인터뷰 대상과 일정을 확인합니다. 대상을 누르면 JW Hub용 메모 작성 화면으로 이동합니다.</div>
+      </div>
+      <div class="count" id="countBadge">배정 0명</div>
+    </div>
+    <div class="notice">
+      앱에는 실제 이름 대신 예약코드만 표시합니다. 실제 인물과 예약코드의 연결정보는 승인된 사용자의 로컬 관리도구에서 관리합니다.
+    </div>
+  </section>
+
+  <section class="card">
+    <div id="assignmentGroups"></div>
+  </section>
+
+  <div class="footer">배정 결과는 관리자가 확정한 내용 기준으로 표시됩니다.</div>
+</div>
+
+<script src="../assets/store.js"></script>
+<script src="../assets/auth.js"></script>
+<script>
+function getSession(){
+  try{ if(window.parent && window.parent !== window && window.parent.CAAuth){ return window.parent.CAAuth.getSession(); } }catch(e){}
+  try{ if(window.CAAuth) return CAAuth.getSession(); }catch(e){}
+  return null;
+}
+
+var session=getSession();
+if(!session || (session.role!=='interviewer' && session.role!=='admin' && session.role!=='system')){
+  location.href='00-login.html';
+}
+
+function renderAssignments(){
+  var state=CAStore.load();
+  var rows=(state.applicants||[]).filter(function(row){
+    if(!row.slotId) return false;
+    var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
+    if(!slot) return false;
+    if(session.role==='admin'||session.role==='system') return true;
+    return slot.interviewer===session.code;
+  }).map(function(row){
+    var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
+    return {row:row,slot:slot};
+  }).sort(function(a,b){
+    return (a.slot.date+a.slot.time).localeCompare(b.slot.date+b.slot.time);
+  });
+
+  document.getElementById('countBadge').textContent='배정 '+rows.length+'명';
+  var el=document.getElementById('assignmentGroups');
+  if(!rows.length){
+    el.innerHTML='<div class="empty">아직 배정된 인터뷰 대상이 없습니다.<br>배정이 확정되면 이 화면에 표시됩니다.</div>';
+    return;
+  }
+
+  var groups={};
+  rows.forEach(function(x){
+    var key=x.slot.date+'|'+x.slot.time+'|'+x.slot.blockLabel;
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(x);
+  });
+
+  el.innerHTML=Object.keys(groups).map(function(key){
+    var items=groups[key], slot=items[0].slot;
+    var list=items.map(function(item){
+      var code=item.row.reservationCode||item.row.code||'-';
+      var url='10-interviewer-memo.html?code='+encodeURIComponent(code)+'&slot='+encodeURIComponent(slot.id);
+      return '<div class="target" role="button" tabindex="0" '
+        +'onclick="location.href=\''+url+'\'" '
+        +'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();location.href=\''+url+'\';}">'
+        +'<div class="code">'+code+'</div>'
+        +'<div class="meta">'+CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+'</div>'
+        +'<div class="status">'+(item.row.status||'배정완료')+'</div>'
+        +'<div class="arrow">›</div></div>';
+    }).join('');
+    return '<div class="group"><div class="group-title">'+CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+'</div>'
+      +'<div class="group-sub">'+items.length+'명 배정</div>'
+      +'<div class="target-list">'+list+'</div></div>';
+  }).join('');
+}
+renderAssignments();
+</script>
+</body>
+</html>

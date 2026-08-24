@@ -218,7 +218,11 @@
     </button>
     <button class="tab" data-tab="interviewer" onclick="setTab('interviewer')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <span>인터뷰어</span>
+      <span>가능시간 입력</span>
+    </button>
+    <button class="tab" data-tab="assignment" onclick="setTab('assignment')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>배정 확인</span>
     </button>
     <button class="tab" data-tab="admin" onclick="setTab('admin')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -241,7 +245,8 @@
   var SCREENS = {
     home:        { title: '홈', src: 'screens/00-home.html' },
     applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html' },
-    interviewer: { title: '인터뷰어 가능시간 제출', src: 'screens/02-interviewer-submit.html' },
+    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html' },
+    assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html' },
     admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html' },
     callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html' },
     inquiry:     { title: '도움말', src: 'screens/07-notices.html' }
@@ -264,7 +269,7 @@
      - VM 관리자(로그인): 관리자 권한 범위의 메뉴를 이용.
   --------------------------------------------------------------- */
   function isAuthorizedFor(id){
-    if (id === 'interviewer') return !!session && (session.role === 'interviewer' || session.role === 'admin');
+    if (id === 'interviewer' || id === 'assignment') return !!session && (session.role === 'interviewer' || session.role === 'admin' || session.role === 'system');
     if (id === 'admin') return !!session && (session.role === 'admin' || session.role === 'system');
     if (id === 'callcenter') return !!session && ['helpdesk','admin','system'].indexOf(session.role) >= 0;
     return true;
@@ -272,7 +277,7 @@
 
   function allowedTabIds(){
     if (session && session.role === 'volunteer') return ['home', 'applicant', 'inquiry'];
-    if (session && session.role === 'interviewer') return ['home', 'interviewer', 'inquiry'];
+    if (session && session.role === 'interviewer') return ['home', 'interviewer', 'assignment', 'inquiry'];
     if (session && session.role === 'helpdesk') return ['home', 'callcenter', 'inquiry'];
     if (session && session.role === 'admin') return ['home', 'admin', 'inquiry'];
     if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
@@ -367,14 +372,14 @@
     if(!d) return;
     d.classList.remove('mode-general','mode-interviewer','mode-admin','mode-callcenter');
     if(id==='admin') d.classList.add('mode-admin');
-    else if(id==='interviewer') d.classList.add('mode-interviewer');
+    else if(id==='interviewer' || id==='assignment') d.classList.add('mode-interviewer');
     else if(id==='callcenter') d.classList.add('mode-callcenter');
     else d.classList.add('mode-general');
   }
 
   function setTab(id, forceReload){
         setShellMode(id);
-// 방어적 재확인: 인터뷰어로 로그인한 상태에서는 인터뷰어·문의 외 다른 탭으로 갈 수 없습니다.
+// 방어적 재확인: 로그인 역할에 허용된 하단 메뉴만 사용할 수 있습니다.
     if (session && allowedTabIds().indexOf(id) === -1) {
       id = defaultTabForRole();
     }
@@ -388,7 +393,7 @@
     document.getElementById('screenTitle').textContent = SCREENS[id].title.split(' · ')[0];
 
     var src;
-    if ((id === 'interviewer' || id === 'admin' || id === 'callcenter') && !isAuthorizedFor(id)) {
+    if ((id === 'interviewer' || id === 'assignment' || id === 'admin' || id === 'callcenter') && !isAuthorizedFor(id)) {
       pendingAuthTab = id;
       src = LOGIN_SRC + '?for=' + encodeURIComponent(id);
     } else if (id === 'inquiry') {
