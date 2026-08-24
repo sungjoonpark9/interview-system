@@ -212,31 +212,31 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
       <span>홈</span>
     </button>
-    <button class="tab" data-tab="applicant" onclick="setTab('applicant')">
+    <button class="tab" data-tab="applicant" id="tabApplicant" onclick="setTab('applicant')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-      <span>가능시간 입력</span>
+      <span>자원봉사자</span>
     </button>
-    <button class="tab" data-tab="volunteerAssignment" onclick="setTab('volunteerAssignment')">
+    <button class="tab" data-tab="volunteerAssignment" id="tabVolunteerAssignment" onclick="setTab('volunteerAssignment')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       <span>배정 확인</span>
     </button>
-    <button class="tab" data-tab="interviewer" onclick="setTab('interviewer')">
+    <button class="tab" data-tab="interviewer" id="tabInterviewer" onclick="setTab('interviewer')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       <span>가능시간 입력</span>
     </button>
-    <button class="tab" data-tab="assignment" onclick="setTab('assignment')">
+    <button class="tab" data-tab="assignment" id="tabAssignment" onclick="setTab('assignment')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       <span>배정 확인</span>
     </button>
-    <button class="tab" data-tab="admin" onclick="setTab('admin')">
+    <button class="tab" data-tab="admin" id="tabAdmin" onclick="setTab('admin')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>관리자</span>
     </button>
-    <button class="tab" data-tab="callcenter" onclick="setTab('callcenter')">
+    <button class="tab" data-tab="callcenter" id="tabCallcenter" onclick="setTab('callcenter')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H5.2L4 18.5V4z"/><path d="M8 8h8M8 12h5"/></svg>
       <span>콜센터</span>
     </button>
-    <button class="tab" data-tab="inquiry" onclick="setTab('inquiry')">
+    <button class="tab" data-tab="inquiry" id="tabInquiry" onclick="setTab('inquiry')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
       <span>도움말</span>
     </button>
@@ -248,8 +248,8 @@
 <script>
   var SCREENS = {
     home:        { title: '홈', src: 'screens/00-home.html?v=20260824-6' },
-    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-7' },
-    volunteerAssignment: { title: '배정 확인', src: 'screens/11-volunteer-assignment.html?v=20260824-7' },
+    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-9' },
+    volunteerAssignment: { title: '배정 확인', src: 'screens/11-volunteer-assignment.html?v=20260824-8' },
     interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-6' },
     assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260824-6' },
     admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-6' },
@@ -290,17 +290,35 @@
   }
 
   function allowedTabIds(){
-    if (session && session.role === 'volunteer') return volunteerHasAssignment() ? ['home','volunteerAssignment','inquiry'] : ['home','applicant','inquiry'];
-    if (session && session.role === 'interviewer') return ['home', 'interviewer', 'assignment', 'inquiry'];
-    if (session && session.role === 'helpdesk') return ['home', 'callcenter', 'inquiry'];
-    if (session && session.role === 'admin') return ['home', 'admin', 'inquiry'];
-    if (session && session.role === 'system') return ['home', 'admin', 'callcenter', 'inquiry'];
-    // 관리자 로그인 상태이거나 비로그인(자원봉사자) 상태에서는 모든 탭 버튼이 보입니다.
-    // 비로그인 상태에서 인터뷰어·관리자 탭을 누르면 로그인 화면으로 안내됩니다.
-    return ['home', 'applicant', 'interviewer', 'admin', 'callcenter', 'inquiry'];
+    if(!session) return ['home','inquiry'];
+
+    if(session.role==='volunteer'){
+      return volunteerHasAssignment()
+        ? ['home','volunteerAssignment','inquiry']
+        : ['home','applicant','inquiry'];
+    }
+    if(session.role==='interviewer') return ['home','interviewer','assignment','inquiry'];
+    if(session.role==='helpdesk') return ['home','callcenter','inquiry'];
+    if(session.role==='admin') return ['home','admin','inquiry'];
+    if(session.role==='system') return ['home','admin','callcenter','inquiry'];
+
+    return ['home','inquiry'];
+  }
+
+  function updateRoleTabLabels(){
+    var applicant=document.querySelector('[data-tab="applicant"] span');
+    var interviewer=document.querySelector('[data-tab="interviewer"] span');
+    var assignment=document.querySelector('[data-tab="assignment"] span');
+    var vAssignment=document.querySelector('[data-tab="volunteerAssignment"] span');
+
+    if(applicant) applicant.textContent='가능시간 입력';
+    if(interviewer) interviewer.textContent='가능시간 입력';
+    if(assignment) assignment.textContent='배정 확인';
+    if(vAssignment) vAssignment.textContent='배정 확인';
   }
 
   function updateTabVisibility(){
+    updateRoleTabLabels();
     var allowed = allowedTabIds();
     document.querySelectorAll('.tab').forEach(function(t){
       var id = t.dataset.tab;
@@ -430,7 +448,7 @@
   function loadFrame(src, forceReload){
     var f = document.getElementById('frame');
     var join = src.indexOf('?')>=0 ? '&' : '?';
-    src = src + join + 'v=20260824h';
+    src = src + join + 'v=20260824j';
     if (!forceReload && f.getAttribute('src') === src) return;
     showLoading();
     if (forceReload) {

@@ -149,11 +149,13 @@
         <button class="code-check" type="button" onclick="if(!beginCodeCheck(this)) return false; var _btn=this; verifyCode(); setTimeout(function(){endCodeCheck(_btn)},700);">코드 확인</button>
       </div>
       <div class="sec-note">예약코드는 안내받은 코드만 입력해 주십시오. 이름·회중·연락처는 이 화면에 입력하거나 저장하지 않습니다.</div>
-      <div class="sec-note" style="margin-top:8px;">샘플 자원봉사자 코드</div>
+      <div class="sec-note" style="margin-top:8px;">샘플 자원봉사자 코드 · 배정 전/후 동작을 비교할 수 있습니다</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-A7K9-P2Q4')">VM27-A7K9-P2Q4</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-B3M8-R6T1')">VM27-B3M8-R6T1</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-C5N2-X8W7')">VM27-C5N2-X8W7</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-A7K9-P2Q4')">VM27-A7K9-P2Q4 · 배정됨</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-B3M8-R6T1')">VM27-B3M8-R6T1 · 배정됨</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-C5N2-X8W7')">VM27-C5N2-X8W7 · 배정됨</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-D4P6-Y2K8')">VM27-D4P6-Y2K8 · 배정 전</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-E7R3-H5N1')">VM27-E7R3-H5N1 · 배정 전</button>
       </div>
       <div class="code-status" id="codeStatus"></div>
     </div>
