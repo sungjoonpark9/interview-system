@@ -199,7 +199,7 @@
   </div>
 
   <div class="content">
-    <iframe id="frame" src="screens/00-home.html?v=20260824-10" title="app-content"></iframe>
+    <iframe id="frame" src="screens/00-home.html?v=20260824-11" title="app-content"></iframe>
     <div class="loading" id="loading">불러오는 중…</div>
   </div>
 
@@ -247,13 +247,13 @@
 <script src="assets/auth.js"></script>
 <script>
   var SCREENS = {
-    home:        { title: '홈', src: 'screens/00-home.html?v=20260824-10' },
-    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-10' },
+    home:        { title: '홈', src: 'screens/00-home.html?v=20260824-11' },
+    applicant:   { title: '자원봉사자 가능시간 제출', src: 'screens/01-applicant-submit.html?v=20260824-11' },
     volunteerAssignment: { title: '배정 확인', src: 'screens/11-volunteer-assignment.html?v=20260824-8' },
-    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-10' },
+    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260824-11' },
     assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260824-6' },
-    admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-10' },
-    callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html?v=20260824-10' },
+    admin:       { title: '관리자 배정 워크북', src: 'screens/03-admin-workbook.html?v=20260824-11' },
+    callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html?v=20260824-11' },
     inquiry:     { title: '도움말', src: 'screens/07-notices.html?v=20260824-6' }
   };
   var LOGIN_SRC = 'screens/00-login.html';
@@ -310,11 +310,35 @@
     var interviewer=document.querySelector('[data-tab="interviewer"] span');
     var assignment=document.querySelector('[data-tab="assignment"] span');
     var vAssignment=document.querySelector('[data-tab="volunteerAssignment"] span');
+    var admin=document.querySelector('[data-tab="admin"] span');
+    var callcenter=document.querySelector('[data-tab="callcenter"] span');
+    var inquiry=document.querySelector('[data-tab="inquiry"] span');
 
-    if(applicant) applicant.textContent='가능시간 입력';
-    if(interviewer) interviewer.textContent='가능시간 입력';
-    if(assignment) assignment.textContent='배정 확인';
-    if(vAssignment) vAssignment.textContent='배정 확인';
+    // 로그인 전에는 '역할 선택' 메뉴로 보이게 합니다.
+    if(!session){
+      if(applicant) applicant.textContent='자원봉사자';
+      if(interviewer) interviewer.textContent='인터뷰어';
+      if(admin) admin.textContent='관리자';
+      if(callcenter) callcenter.textContent='콜센터';
+      if(inquiry) inquiry.textContent='도움말';
+      return;
+    }
+
+    // 로그인 후에는 현재 역할의 실제 업무 메뉴 이름으로 바꿉니다.
+    if(session.role==='volunteer'){
+      if(applicant) applicant.textContent='가능시간 입력';
+      if(vAssignment) vAssignment.textContent='배정 확인';
+    }else if(session.role==='interviewer'){
+      if(interviewer) interviewer.textContent='가능시간 입력';
+      if(assignment) assignment.textContent='배정 확인';
+    }else if(session.role==='helpdesk'){
+      if(callcenter) callcenter.textContent='콜센터';
+    }else if(session.role==='admin' || session.role==='system'){
+      if(admin) admin.textContent='관리자';
+      if(callcenter) callcenter.textContent='콜센터';
+    }
+
+    if(inquiry) inquiry.textContent='도움말';
   }
 
   function updateTabVisibility(){
