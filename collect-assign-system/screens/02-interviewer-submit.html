@@ -73,7 +73,11 @@
   .assign-note{font-size:11.5px;color:var(--gray-light);margin-top:4px;line-height:1.6;}
   .assign-count{font-size:11px;font-weight:500;color:var(--blue);background:var(--pale-teal);padding:6px 10px;border-radius:9999px;white-space:nowrap;}
   .assign-list{display:flex;flex-direction:column;gap:10px;}
-  .assign-item{border:1.5px solid var(--border);border-radius:14px;padding:13px 14px;background:#fff;}
+  .assign-item{border:1.5px solid var(--border);border-radius:14px;padding:13px 14px;background:#fff;cursor:pointer;transition:.14s;position:relative;padding-right:44px;}
+  .assign-item:hover{border-color:var(--blue);background:var(--pale-teal);transform:translateY(-1px);}
+  .assign-item:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--pale-teal);}
+  .assign-arrow{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:21px;color:var(--gray-light);}
+  .assign-item:hover .assign-arrow{color:var(--blue);}
   .assign-code{font-size:13px;font-weight:500;color:var(--ink);}
   .assign-meta{font-size:11.5px;color:var(--gray-light);margin-top:4px;line-height:1.6;}
   .assign-status{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:11px;font-weight:500;color:var(--blue);background:var(--pale-teal);padding:5px 9px;border-radius:9999px;}
@@ -129,7 +133,7 @@
       <div class="assign-count" id="assignedCount">배정 0명</div>
     </div>
     <div id="assignedList" class="assign-list"></div>
-    <div class="assign-tip">※ 인터뷰어 메모 작성 화면과 JW Hub 메모 입력 도우미는 다음 단계에서 연결할 예정입니다. 우선 목업에서는 배정 대상과 시간을 확인하는 흐름만 반영했습니다.</div>
+    <div class="assign-tip">※ 배정 대상을 누르면 해당 예약코드의 인터뷰 메모 작성 화면으로 이동합니다. 메모는 서버에 저장하지 않고 현재 브라우저 세션에서만 임시 유지됩니다.</div>
   </div>
 
   <div class="card" id="formCard">
@@ -246,10 +250,15 @@
       var row = item.row, slot = item.slot;
       var dateText = CAStore.fmtDateShort(slot.date) + ' · ' + slot.blockLabel;
       var ivText = slot.interviewer ? '담당 인터뷰어: ' + slot.interviewer : '';
-      return '<div class="assign-item">'
-        + '<div class="assign-code">' + (row.reservationCode || row.code || '-') + '</div>'
+      var code = (row.reservationCode || row.code || '-');
+      var memoUrl = '10-interviewer-memo.html?code=' + encodeURIComponent(code) + '&slot=' + encodeURIComponent(slot.id);
+      return '<div class="assign-item" role="button" tabindex="0" aria-label="'+code+' 인터뷰 메모 작성" '
+        + 'onclick="location.href=\''+memoUrl+'\'" '
+        + 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();location.href=\''+memoUrl+'\';}">'
+        + '<div class="assign-code">' + code + '</div>'
         + '<div class="assign-meta">' + dateText + '<br>' + ivText + '</div>'
         + '<div class="assign-status">' + (row.status || '배정완료') + '</div>'
+        + '<div class="assign-arrow">›</div>'
         + '</div>';
     }).join('');
   }
