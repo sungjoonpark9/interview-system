@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>인터뷰 메모 작성 (샘플)</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<link rel="stylesheet" href="../assets/augen.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font,'Pretendard Variable','Pretendard','Malgun Gothic',sans-serif);font-weight:350;letter-spacing:-.02em;background:var(--canvas);color:var(--ink);line-height:1.55;min-height:100vh;word-break:keep-all}
+  .wrap{max-width:820px;margin:0 auto;padding:26px 18px 84px}
+  .topline{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+  .back{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;border:.5px solid var(--hair);background:var(--surface);color:var(--ink);text-decoration:none;font-size:19px;flex-shrink:0}
+  h1{font-size:20px;font-weight:500;line-height:1.3;margin-bottom:4px}
+  .sub{font-size:12px;color:var(--ash)}
+  .subject{background:var(--surface);border:.5px solid var(--hair);border-radius:18px;padding:16px 18px;margin-bottom:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .code{font-size:15px;font-weight:550;letter-spacing:.02em}
+  .meta{font-size:11.5px;color:var(--ash);margin-top:2px}
+  .badge{font-size:10.5px;font-weight:500;padding:4px 10px;border-radius:999px;background:var(--blue-wash);color:var(--blue);white-space:nowrap}
+  .notice{background:#eaf2ff;border-radius:14px;padding:13px 15px;font-size:12px;color:#34425c;margin-bottom:14px;line-height:1.65}
+  .notice strong{font-weight:600}
+  .card{background:var(--surface);border:.5px solid var(--hair);border-radius:20px;padding:20px;margin-bottom:14px}
+  .card-title{font-size:14px;font-weight:550;margin-bottom:4px}
+  .card-note{font-size:11.5px;color:var(--ash);margin-bottom:16px}
+  .field{margin-bottom:14px}.field:last-child{margin-bottom:0}
+  label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:#30343a}
+  textarea{width:100%;min-height:70px;resize:vertical;border:1px solid var(--hair);border-radius:12px;background:#fff;padding:11px 12px;font:inherit;font-size:13px;line-height:1.55;color:var(--ink)}
+  textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-wash)}
+  .preview{background:#f3f5f9;border-left:4px solid #506da5;border-radius:8px;padding:13px 14px;white-space:pre-wrap;font-size:12.5px;line-height:1.65;min-height:140px}
+  .counter{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--ash);margin-top:8px}
+  .counter .over{color:#b5432b;font-weight:500}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .btn{border:none;border-radius:999px;padding:13px 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+  .primary{background:var(--ink);color:#fff}.secondary{background:var(--surface);border:1px solid var(--hair);color:var(--ink)}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;background:#161719;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;transition:.18s;z-index:30}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){.wrap{padding:18px 14px 72px}.card{padding:17px}.actions{grid-template-columns:1fr}.subject{align-items:flex-start;flex-direction:column}.badge{align-self:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="04-interviewer-dashboard.html" aria-label="뒤로">‹</a>
+    <div>
+      <h1>인터뷰 메모 작성</h1>
+      <div class="sub">JW Hub 메모 입력 형식에 맞춰 필요한 내용만 정리합니다</div>
+    </div>
+  </div>
+
+  <div class="subject">
+    <div>
+      <div class="code" id="applicantCode">-</div>
+      <div class="meta" id="slotMeta">배정된 인터뷰 정보</div>
+    </div>
+    <span class="badge">서버 저장 안 함</span>
+  </div>
+
+  <div class="notice">
+    <strong>개인정보 보호 안내</strong><br>
+    이 메모는 앱 서버나 DB에 저장되지 않습니다. 이 화면의 현재 로그인 세션에서만 임시로 유지되며, JW Hub에 옮긴 뒤 <b>면접 종료</b>를 누르면 즉시 삭제됩니다. 새로고침·로그아웃·브라우저 종료 시 사라질 수 있습니다.
+  </div>
+
+  <div class="card">
+    <div class="card-title">JW Hub 메모 입력 항목</div>
+    <div class="card-note">관찰한 사실과 실제 답변에 근거해 간결하게 작성합니다. 확인되지 않은 내용은 적지 않습니다.</div>
+
+    <div class="field"><label for="work">[수행 가능 업무]</label><textarea id="work" data-label="수행 가능 업무" placeholder="예: 외국어 응대 안내·행정 지원, IT 지원"></textarea></div>
+    <div class="field"><label for="experience">[관련 경험·기술]</label><textarea id="experience" data-label="관련 경험·기술" placeholder="예: 2019 대표단 지원, 지역대회 주차·안내"></textarea></div>
+    <div class="field"><label for="hope">[희망 업무·사유]</label><textarea id="hope" data-label="희망 업무·사유" placeholder="예: 호텔 외국인 응대 — 대표단 접점 희망"></textarea></div>
+    <div class="field"><label for="time">[가능한 시간]</label><textarea id="time" data-label="가능한 시간" placeholder="예: 대회 전 주중 저녁, 대회 기간 전 일정"></textarea></div>
+    <div class="field"><label for="condition">[체력·조직 관리]</label><textarea id="condition" data-label="체력·조직 관리" placeholder="예: 보통 / 10명 이내"></textarea></div>
+    <div class="field"><label for="etc">[기타]</label><textarea id="etc" data-label="기타" placeholder="예: 부부 동일 업무 희망"></textarea></div>
+    <div class="field"><label for="before">[배정 의견-대회 전]</label><textarea id="before" data-label="배정 의견-대회 전" placeholder="예: 호텔 외국인 응대 — 숙박 체크인 지원 — 응대 경험"></textarea></div>
+    <div class="field"><label for="during">[배정 의견-대회 중]</label><textarea id="during" data-label="배정 의견-대회 중" placeholder="예: 안내부 — 응대 성향 / 주차부 — 지역대회 경험 (가능하면 2개, 선택)"></textarea></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">JW Hub용 메모 미리보기</div>
+    <div class="card-note">빈 항목은 자동으로 제외합니다.</div>
+    <div class="preview" id="preview">입력한 내용이 여기에 정리됩니다.</div>
+    <div class="counter"><span>메모 권한이 없는 경우에는 VM이 안내하는 방식으로 제출</span><span id="count">0 / 1,000자</span></div>
+    <div class="actions">
+      <button class="btn primary" id="copyBtn" onclick="copyMemo()">JW Hub용 메모 복사</button>
+      <button class="btn secondary" onclick="finishInterview()">면접 종료 · 메모 삭제</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">복사했습니다</div>
+
+<script src="../assets/demo-store.js"></script>
+<script src="../assets/auth.js"></script>
+<script>
+const session = DemoAuth.requireRole(['interviewer','admin']);
+const params = new URLSearchParams(location.search);
+const assignmentId = params.get('assignment') || 'A-1001';
+const KEY = 'vm2027_memo_' + assignmentId;
+let assignment = null, slot = null;
+
+function initSubject(){
+  const state = DemoStore.load();
+  assignment = (state.assignments || []).find(a=>a.id===assignmentId) || (state.assignments||[])[0];
+  if(!assignment) return;
+  slot = state.slots.find(s=>s.id===assignment.slotId);
+  document.getElementById('applicantCode').textContent = assignment.applicantCode;
+  document.getElementById('slotMeta').textContent = slot ? DemoStore.fmtDateShort(slot.date)+' '+slot.time+' · '+assignment.status : assignment.status;
+}
+
+function fields(){ return Array.from(document.querySelectorAll('textarea[data-label]')); }
+function buildMemo(){
+  return fields().map(el=>({label:el.dataset.label,val:el.value.trim()})).filter(x=>x.val).map(x=>'['+x.label+'] '+x.val).join('\n');
+}
+function render(){
+  const text=buildMemo();
+  document.getElementById('preview').textContent=text || '입력한 내용이 여기에 정리됩니다.';
+  const c=document.getElementById('count'); c.textContent=text.length+' / 1,000자'; c.className=text.length>1000?'over':'';
+  document.getElementById('copyBtn').disabled=text.length===0 || text.length>1000;
+}
+function persist(){
+  const data={}; fields().forEach(el=>data[el.id]=el.value);
+  try{ sessionStorage.setItem(KEY,JSON.stringify(data)); }catch(e){}
+  render();
+}
+function restore(){
+  try{
+    const raw=sessionStorage.getItem(KEY); if(!raw)return;
+    const data=JSON.parse(raw); fields().forEach(el=>{if(data[el.id]!=null)el.value=data[el.id]});
+  }catch(e){}
+}
+async function copyMemo(){
+  const text=buildMemo(); if(!text || text.length>1000)return;
+  try{ await navigator.clipboard.writeText(text); showToast('JW Hub용 메모를 복사했습니다'); }
+  catch(e){
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('JW Hub용 메모를 복사했습니다');
+  }
+}
+function finishInterview(){
+  if(!confirm('면접을 종료하고 이 화면의 임시 메모를 삭제할까요?\nJW Hub에 옮긴 내용을 먼저 확인해 주세요.')) return;
+  try{sessionStorage.removeItem(KEY)}catch(e){}
+  location.href='04-interviewer-dashboard.html';
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+fields().forEach(el=>el.addEventListener('input',persist));
+initSubject(); restore(); render();
+</script>
+<script src="../assets/shell-nav.js"></script>
+</body>
+</html>

@@ -33,6 +33,13 @@
   .empty{font-size:12px; color:var(--ash); text-align:center; padding:20px 0;}
   .footer-tag{text-align:center; margin-top:6px; font-size:10.5px; color:var(--ash);}
   .footer-tag a{color:var(--blue);}
+  .target{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:.5px solid var(--hair);}
+  .target:first-of-type{border-top:none;}
+  .target-main{min-width:0;flex:1;}
+  .target-code{font-size:13px;font-weight:520;letter-spacing:.01em;}
+  .target-meta{font-size:11.5px;color:var(--ash);margin-top:2px;}
+  .memo-btn{border:none;background:var(--ink);color:#fff;border-radius:9999px;padding:8px 12px;font-family:inherit;font-size:11.5px;font-weight:450;cursor:pointer;white-space:nowrap;}
+  .privacy-note{font-size:11.5px;color:#44536b;background:#eaf2ff;border-radius:12px;padding:10px 12px;line-height:1.6;margin-bottom:12px;}
 </style>
 </head>
 <body>
@@ -64,6 +71,13 @@
     <div class="sec-title">배정된 인터뷰 시간</div>
     <div class="sec-note">관리자가 만든 실제 시간대입니다. &quot;모집중&quot;은 지금 신청자에게 열려 있는 시간입니다.</div>
     <div id="slotList"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">배정된 인터뷰 대상</div>
+    <div class="sec-note">앱에는 실제 이름 대신 예약코드만 표시합니다. 대상을 선택하면 JW Hub용 메모를 작성할 수 있습니다.</div>
+    <div class="privacy-note">실제 인물과 예약코드의 연결은 승인된 사용자의 로컬 관리도구에서 관리합니다. 인터뷰어에게 필요한 실제 대상자 자료는 별도로 전달할 수 있습니다.</div>
+    <div id="targetList"></div>
   </div>
 
   <div class="footer-tag"><a href="03-interviewer-availability.html">가능한 날짜 더 알려주기 →</a></div>
@@ -103,6 +117,20 @@
           : '<span class="badge b-closed">'+s.status+'</span>';
         return '<div class="row"><div><div class="d">'+DemoStore.fmtDateShort(s.date)+' '+s.time+'</div>'+
           '<div class="meta">신청 '+s.booked+'/'+s.cap+'명</div></div>'+badge+'</div>';
+      }).join('');
+    }
+
+    const myTargets = (state.assignments || []).filter(a => a.interviewer === session.name);
+    const targetEl = document.getElementById('targetList');
+    if(myTargets.length === 0){
+      targetEl.innerHTML = '<div class="empty">아직 배정된 인터뷰 대상이 없습니다.</div>';
+    } else {
+      targetEl.innerHTML = myTargets.map(a=>{
+        const s = state.slots.find(x=>x.id===a.slotId);
+        const when = s ? DemoStore.fmtDateShort(s.date)+' '+s.time : '시간 미정';
+        return '<div class="target"><div class="target-main"><div class="target-code">'+a.applicantCode+'</div>'+
+          '<div class="target-meta">'+when+' · '+a.status+'</div></div>'+
+          '<button class="memo-btn" onclick="location.href=\'10-interviewer-memo.html?assignment='+encodeURIComponent(a.id)+'\'">메모 작성</button></div>';
       }).join('');
     }
   }

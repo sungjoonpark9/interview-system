@@ -10,6 +10,7 @@
     { id: 'login', t: '로그인 (인터뷰어·관리자)' },
     { id: '03-interviewer-availability', t: '가능한 날짜 알려주기 (인터뷰어)' },
     { id: '04-interviewer-dashboard', t: '내 배정 확인 (인터뷰어)' },
+    { id: '10-interviewer-memo', t: '인터뷰 메모 작성 (인터뷰어)' },
     { id: '02-admin-booking', t: '예약시스템 (관리자)' },
     { id: '09-weekly-dashboard', t: '주간 수급 현황 (관리자)' },
     { id: '05-admin-helpdesk', t: '헬프데스크 (관리자)' }

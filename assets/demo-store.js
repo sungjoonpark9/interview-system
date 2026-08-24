@@ -22,6 +22,16 @@ window.DemoStore = (function () {
         { id: "R-1002", name: "이OO · 박OO", email: "couple02@email.com", kind: "부부", slotId: "SLOT-0803-01", slotLabel: "SLOT-0803-01 · 10:00", status: "확정", zoomSent: true, at: "07.24 20:55" },
         { id: "R-1004", name: "정OO", email: "applicant04@email.com", kind: "개인", slotId: "SLOT-0803-03", slotLabel: "SLOT-0803-03 · 11:00", status: "취소", zoomSent: false, at: "07.23 14:20" }
       ],
+      // 인터뷰어에게는 실제 이름 대신 예약코드 기준으로 배정 대상을 표시합니다.
+      // 실제 인물 ↔ 예약코드 연결은 로컬 관리도구에서만 관리하는 구조를 가정합니다.
+      assignments: [
+        { id: "A-1001", applicantCode: "VM27-A7K9-P2Q4", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
+        { id: "A-1002", applicantCode: "VM27-N4D8-K6R2", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
+        { id: "A-1003", applicantCode: "VM27-H3M5-T9W7", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
+        { id: "A-1004", applicantCode: "VM27-C8F2-L4S6", slotId: "SLOT-0803-02", interviewer: "이수진", status: "대기" },
+        { id: "A-1005", applicantCode: "VM27-R6B3-J8P1", slotId: "SLOT-0803-02", interviewer: "이수진", status: "대기" },
+        { id: "A-1006", applicantCode: "VM27-Q2T7-M5K9", slotId: "SLOT-0803-03", interviewer: "이수진", status: "대기" }
+      ],
       // 인터뷰어가 등록한 "날짜별 최대 가능 횟수" — 관리자가 이 한도 안에서 실제 시간대(슬롯)를 만듭니다.
       capacity: [
         { id: "CAP-20260805-김민수", date: "2026-08-05", interviewer: "김민수", email: "interviewer1@jw.org", maxCount: 4, used: 0, at: "07.30 10:00" },
@@ -43,6 +53,7 @@ window.DemoStore = (function () {
       if (raw) {
         var parsed = JSON.parse(raw);
         if (!parsed.capacity) parsed.capacity = [];
+        if (!parsed.assignments) parsed.assignments = seed().assignments;
         if (!parsed.faq) parsed.faq = seed().faq;
         if (!parsed.helpdesk) parsed.helpdesk = [];
         return parsed;
