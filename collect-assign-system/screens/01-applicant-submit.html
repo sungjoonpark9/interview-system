@@ -95,6 +95,9 @@
 
 
   button:disabled{opacity:.62;cursor:default}
+
+  .sample-code{border:1px solid #d7dde6;background:#fff;border-radius:999px;padding:6px 10px;font-size:11px;color:#334155;cursor:pointer}
+  .sample-code:hover{background:#f4f7fb;border-color:#aeb8c7}
 </style>
 </head>
 <body>
@@ -143,9 +146,15 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
           <input type="text" id="reservationCode" placeholder="예: VM27-A7K9-P2Q4" maxlength="14" autocomplete="off" style="text-transform:uppercase">
         </div>
-        <button class="code-check" type="button" onclick="if(!beginCodeCheck(this)) return false; var _btn=this; setTimeout(function(){endCodeCheck(_btn)},700); verifyCode()" onclick="if(!beginCodeCheck(this)) return false; var _btn=this; setTimeout(function(){endCodeCheck(_btn)},700);">코드 확인</button>
+        <button class="code-check" type="button" onclick="if(!beginCodeCheck(this)) return false; var _btn=this; verifyCode(); setTimeout(function(){endCodeCheck(_btn)},700);">코드 확인</button>
       </div>
       <div class="sec-note">예약코드는 안내받은 코드만 입력해 주십시오. 이름·회중·연락처는 이 화면에 입력하거나 저장하지 않습니다.</div>
+      <div class="sec-note" style="margin-top:8px;">샘플 자원봉사자 코드</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-A7K9-P2Q4')">VM27-A7K9-P2Q4</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-B3M8-R6T1')">VM27-B3M8-R6T1</button>
+        <button type="button" class="sample-code" onclick="useSampleCode('VM27-C5N2-X8W7')">VM27-C5N2-X8W7</button>
+      </div>
       <div class="code-status" id="codeStatus"></div>
     </div>
 
@@ -300,6 +309,12 @@
       '가능한 오전·오후 '+periods.length+'건이 '+(existing?'수정':'접수')+'되었습니다. 담당자가 다음 배정 실행 때 반영합니다.';
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
+  }
+
+  function useSampleCode(code){
+    var input=document.getElementById('reservationCode');
+    input.value=code;
+    verifyCode();
   }
 
   function verifyCode(){
