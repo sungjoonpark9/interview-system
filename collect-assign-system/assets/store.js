@@ -9,14 +9,35 @@ window.CAStore = (function () {
 
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
 
-  /* 1차 목업에서는 Excel → 로컬 관리도구 → API를 거쳐 전달된 결과가
-     이미 앱에 들어온 상태로 시작합니다. 앱 안에는 운영타임을 등록하는 UI가 없습니다. */
-  function seedInterviewTimes() {
-    return [
-      { id:"IT-20261005-1900", date:"2026-10-05", start:"19:00", end:"21:30", source:"imported" },
-      { id:"IT-20261007-1900", date:"2026-10-07", start:"19:00", end:"21:30", source:"imported" },
-      { id:"IT-20261010-0900", date:"2026-10-10", start:"09:00", end:"11:30", source:"imported" }
-    ];
+  /* 승인 운영계획과 인터뷰어 개인 응답은 각각 로컬 관리도구/API에서
+     독립적으로 전달될 수 있는 데이터입니다. 개별 운영일은 기간·요일 규칙에서 생성합니다. */
+  function seedApprovedInterviewSchedule() {
+    return {
+      startDate:"2026-10-05", endDate:"2026-10-31", source:"approved-operating-plan",
+      weekdayTimes:{
+        "1":[{start:"19:00",end:"21:30"}], "2":[{start:"19:00",end:"21:30"}],
+        "3":[{start:"19:00",end:"21:30"}], "4":[{start:"19:00",end:"21:30"}],
+        "5":[{start:"19:00",end:"21:30"}],
+        "6":[{start:"09:00",end:"11:30"},{start:"13:00",end:"15:30"},{start:"16:00",end:"18:30"},{start:"19:30",end:"22:00"}]
+      },
+      additionalTimes:[]
+    };
+  }
+  function interviewTimeId(date,start) { return "IT-"+date.replace(/-/g,"")+"-"+start.replace(":",""); }
+  function generateApprovedInterviewTimes(plan) {
+    var rows=[], seen={};
+    function add(date,time){
+      var id=interviewTimeId(date,time.start); if(seen[id])return; seen[id]=true;
+      rows.push({id:id,date:date,start:time.start,end:time.end,source:plan.source||"approved-operating-plan"});
+    }
+    var cursor=new Date(plan.startDate+"T00:00:00"), end=new Date(plan.endDate+"T00:00:00");
+    while(cursor<=end){
+      var date=cursor.getFullYear()+"-"+pad2(cursor.getMonth()+1)+"-"+pad2(cursor.getDate());
+      ((plan.weekdayTimes||{})[String(cursor.getDay())]||[]).forEach(function(time){add(date,time);});
+      cursor.setDate(cursor.getDate()+1);
+    }
+    (plan.additionalTimes||[]).forEach(function(time){add(time.date,time);});
+    return rows.sort(function(a,b){return (a.date+a.start).localeCompare(b.date+b.start);});
   }
   function seedInterviewerAvailability(interviewTimes) {
     var byId={}; (interviewTimes||[]).forEach(function(it){byId[it.id]=it;});
@@ -49,8 +70,9 @@ window.CAStore = (function () {
         var t=timeText(m), id=it.date.replace(/-/g,"")+"_"+t.replace(":","");
         slots.push({ id:id, date:it.date, time:t, blockId:it.id,
           blockLabel:t+" 인터뷰", cap:it.teams, booked:0,
+          opened:it.teams>0,
           interviewer:"TEAM-POOL", interviewerCodes:(it.interviewerCodes||[]).slice(), teamPairs:(it.teamPairs||[]).map(function(p){return p.slice();}),
-          status:it.teams>0?"모집중":"마감", duration:30, transition:10 });
+          status:it.teams>0?"모집중":"예약 미오픈", duration:30, transition:10 });
       }
     });
     return slots;
@@ -71,7 +93,7 @@ window.CAStore = (function () {
       row.times=[]; row.periods=[]; row.status=row.slotId?"예약확정":"예약전"; row.at=nowLabel();
       if(row.slotId){var slot=(slots||[]).find(function(s){return s.id===row.slotId;});if(slot)slot.booked+=1;}
     });
-    (slots||[]).forEach(function(slot){slot.status=slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");});
+    (slots||[]).forEach(function(slot){slot.status=!slot.opened?"예약 미오픈":(slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중"));});
     return rows;
   }
 
@@ -95,14 +117,18 @@ window.CAStore = (function () {
   }
 
   function seed() {
-    var interviewTimes=seedInterviewTimes();
-    var availability=seedInterviewerAvailability(interviewTimes);
-    connectInterviewersToTimes(interviewTimes,availability);
-    var slots=seedSlots(interviewTimes);
+    var approvedInterviewSchedule=seedApprovedInterviewSchedule();
+    var approvedInterviewTimes=generateApprovedInterviewTimes(approvedInterviewSchedule);
+    var interviewerAvailability=seedInterviewerAvailability(approvedInterviewTimes);
+    connectInterviewersToTimes(approvedInterviewTimes,interviewerAvailability);
+    var slots=seedSlots(approvedInterviewTimes);
     return {
-      interviewTimes: interviewTimes,
+      approvedInterviewSchedule: approvedInterviewSchedule,
+      approvedInterviewTimes: approvedInterviewTimes,
+      interviewerAvailability: interviewerAvailability,
+      interviewTimes: approvedInterviewTimes, // 이전 화면 호환 별칭
       slots: slots,
-      availability: availability, // 외부에서 전달된 인터뷰어별 2시간 30분 운영타임
+      availability: interviewerAvailability, // 이전 화면 호환 별칭
       applicants: seedApplicants(slots),
       helpdesk: [],     // ⑤시트
       faq: seedFaq(),   // 자주 묻는 질문 (수작업 등록/삭제 가능)
@@ -117,8 +143,10 @@ window.CAStore = (function () {
       var raw = localStorage.getItem(KEY);
       if (raw) {
         var parsed = JSON.parse(raw);
+        normalizeSeparatedData(parsed);
         if (!parsed.faq) parsed.faq = seedFaq(); // 이전 버전 데모 데이터와의 호환
         if (!parsed.notices) parsed.notices = seedNotices();
+        save(parsed);
         return parsed;
       }
     } catch (e) {}
@@ -155,7 +183,7 @@ window.CAStore = (function () {
     var row=(state.applicants||[]).find(function(r){return r.reservationCode===code;});
     if(row && row.slotId) return {ok:false, reason:"already", row:row};
     var slot=(state.slots||[]).find(function(s){return s.id===slotId;});
-    if(!slot || slot.status==="마감" || slot.booked>=slot.cap) return {ok:false, reason:"full"};
+    if(!slot || !slot.opened || slot.status==="예약 미오픈" || slot.status==="마감" || slot.booked>=slot.cap) return {ok:false, reason:"full"};
     slot.booked+=1;
     slot.status=slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");
     if(!row){ row={id:"A-"+Date.now(),reservationCode:code,times:[],periods:[],slotId:"",status:""}; state.applicants.push(row); }
@@ -166,20 +194,42 @@ window.CAStore = (function () {
   }
 
   function rebuildTeamCapacity(state) {
-    connectInterviewersToTimes(state.interviewTimes||[],state.availability||[]);
-    var timesById={}; (state.interviewTimes||[]).forEach(function(it){timesById[it.id]=it;});
+    var times=state.approvedInterviewTimes||state.interviewTimes||[];
+    var availability=state.interviewerAvailability||state.availability||[];
+    state.approvedInterviewTimes=times; state.interviewerAvailability=availability;
+    state.interviewTimes=times; state.availability=availability;
+    connectInterviewersToTimes(times,availability);
+    var timesById={}; times.forEach(function(it){timesById[it.id]=it;});
     (state.slots||[]).forEach(function(slot){
       var it=timesById[slot.blockId]; if(!it)return;
+      slot.opened=slot.opened===true||it.teams>0||slot.booked>0;
       slot.cap=it.teams;
       slot.interviewerCodes=(it.interviewerCodes||[]).slice();
       slot.teamPairs=(it.teamPairs||[]).map(function(p){return p.slice();});
-      slot.status=slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");
+      slot.status=!slot.opened?"예약 미오픈":(slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중"));
     });
+    return state;
+  }
+
+  function normalizeSeparatedData(state) {
+    if(!state.approvedInterviewSchedule) state.approvedInterviewSchedule=seedApprovedInterviewSchedule();
+    if(!state.approvedInterviewTimes) state.approvedInterviewTimes=generateApprovedInterviewTimes(state.approvedInterviewSchedule);
+    if(!state.interviewerAvailability) state.interviewerAvailability=state.availability||seedInterviewerAvailability(state.approvedInterviewTimes);
+    state.interviewTimes=state.approvedInterviewTimes;
+    state.availability=state.interviewerAvailability;
+    connectInterviewersToTimes(state.approvedInterviewTimes,state.interviewerAvailability);
+    var existing={}; (state.slots||[]).forEach(function(slot){existing[slot.id]=slot;});
+    state.slots=seedSlots(state.approvedInterviewTimes).map(function(slot){
+      var old=existing[slot.id];
+      if(old){slot.booked=Number(old.booked||0); slot.opened=old.opened===true||Number(old.cap||0)>0||slot.booked>0; slot.status=old.status;}
+      return slot;
+    });
+    rebuildTeamCapacity(state);
     return state;
   }
 
   return {
     load: load, save: save, reset: reset, seed: seed, addLog: addLog, nowLabel: nowLabel, fmtDateShort: fmtDateShort, maskCode: maskCode,
-    reserveSlot: reserveSlot, rebuildTeamCapacity: rebuildTeamCapacity, DOW: DOW
+    reserveSlot: reserveSlot, rebuildTeamCapacity: rebuildTeamCapacity, generateApprovedInterviewTimes: generateApprovedInterviewTimes, DOW: DOW
   };
 })();

@@ -35,6 +35,9 @@
   .sec-note{font-size:11.5px; color:var(--gray-light); margin-bottom:12px;}
   .cal-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
   .cal-head .mo{font-size:14.5px; font-weight:500;}
+  .cal-nav{display:flex; gap:6px;}
+  .cal-move{border:1px solid var(--border); background:var(--surface); color:var(--gray); border-radius:9999px; padding:5px 10px; font:inherit; font-size:11px; cursor:pointer;}
+  .cal-move:disabled{opacity:.35; cursor:default;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px;}
   .cal-dow{text-align:center; font-size:10.5px; font-weight:350; color:var(--gray-light); padding:3px 0;}
   .cal-cell{aspect-ratio:1; border-radius:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12.5px; font-weight:350; color:var(--ink); border:1.5px solid transparent; transition:0.12s;}
@@ -128,7 +131,11 @@
     <div class="sec-note">달력에서 운영일을 선택한 뒤 가능한 2시간 30분 타임을 선택해 주세요.</div>
 
     <div class="cal-head">
-      <div class="mo" id="calMonthLabel">2026년 10월</div>
+      <div class="mo" id="calMonthLabel">운영 가능한 날짜</div>
+      <div class="cal-nav">
+        <button type="button" class="cal-move" id="prevMonthBtn" onclick="moveMonth(-1)" aria-label="이전 운영 월">이전</button>
+        <button type="button" class="cal-move" id="nextMonthBtn" onclick="moveMonth(1)" aria-label="다음 운영 월">다음</button>
+      </div>
     </div>
     <div class="cal-grid" id="calDow"></div>
     <div class="cal-grid" id="calGrid"></div>
@@ -170,16 +177,46 @@
   })();
 </script>
 <script>
-  const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
   const selectedTimeIds = new Set();
   const dowNames = ['일','월','화','수','목','금','토'];
+  let calendarMonths = [];
+  let monthIndex = 0;
 
   function pad(n){ return n<10 ? '0'+n : ''+n; }
-  function operatingTimes(){ return (CAStore.load().interviewTimes||[]).slice().sort(function(a,b){return (a.date+a.start).localeCompare(b.date+b.start);}); }
+  function operatingTimes(){ return (CAStore.load().approvedInterviewTimes||[]).slice().sort(function(a,b){return (a.date+a.start).localeCompare(b.date+b.start);}); }
   function timesForDate(dstr){ return operatingTimes().filter(function(it){return it.date===dstr;}); }
 
+  function syncCalendarMonths(preferredDate){
+    const previousMonth = calendarMonths[monthIndex];
+    calendarMonths = Array.from(new Set(operatingTimes().map(function(it){return String(it.date||'').slice(0,7);}).filter(function(v){return /^\d{4}-\d{2}$/.test(v);}))).sort();
+    const preferredMonth = preferredDate ? String(preferredDate).slice(0,7) : previousMonth;
+    const preferredIndex = calendarMonths.indexOf(preferredMonth);
+    monthIndex = preferredIndex >= 0 ? preferredIndex : 0;
+  }
+
+  function moveMonth(delta){
+    const next = monthIndex + delta;
+    if(next < 0 || next >= calendarMonths.length) return;
+    monthIndex = next;
+    renderCalendar();
+  }
+
   function renderCalendar(){
+    const monthKey = calendarMonths[monthIndex];
+    const prevBtn = document.getElementById('prevMonthBtn');
+    const nextBtn = document.getElementById('nextMonthBtn');
+    prevBtn.disabled = monthIndex <= 0;
+    nextBtn.disabled = monthIndex >= calendarMonths.length-1;
+    if(!monthKey){
+      document.getElementById('calMonthLabel').textContent = '운영 가능한 날짜 없음';
+      document.getElementById('calDow').innerHTML = '';
+      document.getElementById('calGrid').innerHTML = '<div class="empty-note" style="grid-column:1/-1">전달된 운영타임이 없습니다.</div>';
+      return;
+    }
+    const monthParts = monthKey.split('-');
+    const viewYear = Number(monthParts[0]);
+    const viewMonth = Number(monthParts[1])-1;
     document.getElementById('calMonthLabel').textContent = viewYear + '년 ' + (viewMonth+1) + '월';
     document.getElementById('calDow').innerHTML = dowNames.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
     const first = new Date(viewYear, viewMonth, 1);
@@ -267,8 +304,9 @@
 
     const state = CAStore.load();
     const row={ interviewerCode, timeIds:timeIds, times:times, source:'interviewer-direct', at: CAStore.nowLabel() };
-    const existing=state.availability.find(function(a){ return a.interviewerCode===interviewerCode; });
-    if(existing) Object.assign(existing,row); else state.availability.push(row);
+    const existing=state.interviewerAvailability.find(function(a){ return a.interviewerCode===interviewerCode; });
+    if(existing) Object.assign(existing,row); else state.interviewerAvailability.push(row);
+    state.availability=state.interviewerAvailability;
     CAStore.rebuildTeamCapacity(state);
     CAStore.addLog(state, CAStore.maskCode(interviewerCode)+' 인터뷰어 코드로 '+timeIds.length+'개 운영타임이 제출되었습니다.');
     CAStore.save(state);
@@ -285,7 +323,7 @@
       if(!s || s.role!=='interviewer' || !s.code) return;
       document.getElementById('ivCode').value=s.code;
       document.getElementById('interviewerCodeField').style.display='none';
-      var row=CAStore.load().availability.find(function(a){return a.interviewerCode===s.code;});
+      var row=CAStore.load().interviewerAvailability.find(function(a){return a.interviewerCode===s.code;});
       if(!row) return;
       var ids=(row.timeIds||[]).slice();
       if(!ids.length) (row.times||[]).forEach(function(v){var p=v.split(' '),it=operatingTimes().find(function(x){return x.date===p[0]&&x.start===p[1];});if(it)ids.push(it.id);});
@@ -298,6 +336,7 @@
   }
 
   loadLoggedInInterviewer();
+  syncCalendarMonths(Array.from(chosenDates).sort()[0]);
   renderCalendar();
   renderDateBlocks();
   renderSummary();

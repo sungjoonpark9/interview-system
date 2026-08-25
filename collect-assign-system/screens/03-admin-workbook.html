@@ -263,8 +263,8 @@
   function render(){
     var state = CAStore.load();
 
-    document.getElementById('cntSlots').textContent = (state.interviewTimes||[]).length;
-    document.getElementById('cntAvail').textContent = (state.interviewTimes||[]).reduce(function(n,it){return n+(it.teamPairs||[]).length;},0);
+    document.getElementById('cntSlots').textContent = (state.approvedInterviewTimes||[]).length;
+    document.getElementById('cntAvail').textContent = (state.approvedInterviewTimes||[]).reduce(function(n,it){return n+(it.teamPairs||[]).length;},0);
     document.getElementById('cntApplicant').textContent = state.slots.length;
     var results = state.applicants.filter(function(r){return r.slotId;});
     var doneCount = results.length;
@@ -274,14 +274,14 @@
 
     // 외부에서 전달된 2시간 30분 운영타임
     var tS = document.getElementById('tbodySlots');
-    tS.innerHTML = (state.interviewTimes||[]).map(function(it){
+    tS.innerHTML = (state.approvedInterviewTimes||[]).map(function(it){
       return '<tr><td>'+esc(it.id)+'</td><td>'+CAStore.fmtDateShort(it.date)+'</td><td>'+esc(it.start+'~'+it.end)+'</td>'+
         '<td>'+esc((it.interviewerCodes||[]).join(', ')||'-')+'</td><td><b>'+Number(it.teams||0)+'팀</b></td><td>'+esc(it.source||'imported')+'</td></tr>';
     }).join('');
 
     // 2인 인터뷰어 팀 구성
     var tA = document.getElementById('tbodyAvail');
-    var teamRows=[];(state.interviewTimes||[]).forEach(function(it){(it.teamPairs||[]).forEach(function(pair,i){teamRows.push({it:it,pair:pair,index:i+1});});});
+    var teamRows=[];(state.approvedInterviewTimes||[]).forEach(function(it){(it.teamPairs||[]).forEach(function(pair,i){teamRows.push({it:it,pair:pair,index:i+1});});});
     tA.innerHTML=teamRows.length?teamRows.map(function(x){return '<tr><td>'+CAStore.fmtDateShort(x.it.date)+' '+esc(x.it.start+'~'+x.it.end)+'</td><td>팀 '+x.index+'</td><td>'+esc(x.pair.join(' · '))+'</td><td>각 시작시간 정원 1명</td></tr>';}).join(''):'<tr class="empty-row"><td colspan="4">구성 가능한 2인 팀이 없습니다.</td></tr>';
 
     // 팀 수를 기준으로 생성된 예약 슬롯

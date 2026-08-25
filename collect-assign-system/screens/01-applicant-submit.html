@@ -42,6 +42,9 @@
 
   .cal-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;}
   .cal-head .mo{font-size:14.5px; font-weight:500;}
+  .cal-nav{display:flex; gap:6px;}
+  .cal-move{border:1px solid var(--border); background:var(--surface); color:var(--gray); border-radius:9999px; padding:5px 10px; font:inherit; font-size:11px; cursor:pointer;}
+  .cal-move:disabled{opacity:.35; cursor:default;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px;}
   .cal-dow{text-align:center; font-size:10.5px; font-weight:350; color:var(--gray-light); padding:3px 0;}
   .cal-cell{position:relative; aspect-ratio:1; border-radius:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12.5px; font-weight:350; color:var(--ink); border:1.5px solid transparent; transition:0.12s;}
@@ -50,6 +53,7 @@
   .cal-cell.available{background:rgba(0,113,227,.07); border-color:rgba(0,113,227,.22);}
   .cal-cell .state-dot{position:absolute; left:50%; bottom:7px; width:4px; height:4px; margin-left:-2px; border-radius:50%; background:var(--blue);}
   .cal-cell.sold-out{background:#f2f2f4; border-color:#dedee2; color:var(--gray-light);}
+  .cal-cell.unopened{background:#f7f7f8; border-color:#ececef; color:#b7b7bc; cursor:default;}
   .cal-cell .cal-status{position:absolute; left:50%; bottom:3px; transform:translateX(-50%); font-size:7.5px; line-height:1; white-space:nowrap; color:var(--gray-light);}
   .cal-cell.chosen{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 0 0 2px rgba(0,113,227,.18); font-weight:500;}
   .cal-cell.chosen .state-dot{background:#fff; width:5px; height:5px; margin-left:-2.5px;}
@@ -176,7 +180,11 @@
     <div class="sec-note">날짜를 선택한 뒤 정원이 남아 있는 시작시간 하나를 골라 주십시오.</div>
 
     <div class="cal-head">
-      <div class="mo" id="calMonthLabel">2026년 10월</div>
+      <div class="mo" id="calMonthLabel">예약 가능한 날짜</div>
+      <div class="cal-nav">
+        <button type="button" class="cal-move" id="prevMonthBtn" onclick="moveMonth(-1)" aria-label="이전 예약 월">이전</button>
+        <button type="button" class="cal-move" id="nextMonthBtn" onclick="moveMonth(1)" aria-label="다음 예약 월">다음</button>
+      </div>
     </div>
     <div class="cal-grid" id="calDow"></div>
     <div class="cal-grid" id="calGrid"></div>
@@ -206,11 +214,12 @@
 <script src="../assets/store.js"></script>
 <script src="../assets/auth.js"></script>
 <script>
-  const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
   let verifiedCode = '';
   let selectedSlotId = '';
   const dowNames = ['일','월','화','수','목','금','토'];
+  let calendarMonths = [];
+  let monthIndex = 0;
   function pad(n){ return n<10 ? '0'+n : ''+n; }
 
   function fmtDate(dstr){
@@ -228,23 +237,52 @@
   function availableSlots(){
     return (CAStore.load().slots||[]).filter(function(s){return s.status!=="마감" && s.booked<s.cap;});
   }
+  function syncCalendarMonths(preferredDate){
+    var previousMonth=calendarMonths[monthIndex];
+    calendarMonths=Array.from(new Set((CAStore.load().slots||[]).map(function(s){return String(s.date||'').slice(0,7);}).filter(function(v){return /^\d{4}-\d{2}$/.test(v);}))).sort();
+    var preferredMonth=preferredDate?String(preferredDate).slice(0,7):previousMonth;
+    var preferredIndex=calendarMonths.indexOf(preferredMonth);
+    monthIndex=preferredIndex>=0?preferredIndex:0;
+  }
+  function moveMonth(delta){
+    var next=monthIndex+delta;
+    if(next<0||next>=calendarMonths.length)return;
+    monthIndex=next;
+    chosenDates.clear(); selectedSlotId='';
+    renderCalendar(); renderDateBlocks(); renderSummary();
+  }
   function renderCalendar(){
+    var monthKey=calendarMonths[monthIndex];
+    var prevBtn=document.getElementById('prevMonthBtn'), nextBtn=document.getElementById('nextMonthBtn');
+    prevBtn.disabled=monthIndex<=0;
+    nextBtn.disabled=monthIndex>=calendarMonths.length-1;
+    if(!monthKey){
+      document.getElementById('calMonthLabel').textContent='예약 가능한 날짜 없음';
+      document.getElementById('calDow').innerHTML='';
+      document.getElementById('calGrid').innerHTML='<div class="empty-note" style="grid-column:1/-1">현재 예약 가능한 슬롯이 없습니다.</div>';
+      return;
+    }
+    var monthParts=monthKey.split('-'), viewYear=Number(monthParts[0]), viewMonth=Number(monthParts[1])-1;
     document.getElementById('calMonthLabel').textContent=viewYear+'년 '+(viewMonth+1)+'월';
     document.getElementById('calDow').innerHTML=dowNames.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
-    var dates={};
-    (CAStore.load().slots||[]).forEach(function(s){
-      if(!dates[s.date]) dates[s.date]={hasSlots:false,hasOpen:false};
-      dates[s.date].hasSlots=true;
-      if(s.status!=='마감' && s.booked<s.cap) dates[s.date].hasOpen=true;
+    var state=CAStore.load(), dates={};
+    (state.approvedInterviewTimes||[]).forEach(function(it){
+      if(!dates[it.date])dates[it.date]={approved:true,hasOpened:false,hasOpen:false};
+    });
+    (state.slots||[]).forEach(function(s){
+      if(!dates[s.date]) dates[s.date]={approved:false,hasOpened:false,hasOpen:false};
+      var opened=s.opened===true||s.cap>0||s.booked>0;
+      if(opened)dates[s.date].hasOpened=true;
+      if(opened&&s.status!=='마감'&&s.status!=='예약 미오픈'&&s.booked<s.cap)dates[s.date].hasOpen=true;
     });
     var first=new Date(viewYear,viewMonth,1), startDow=first.getDay(), days=new Date(viewYear,viewMonth+1,0).getDate(), html='';
     for(var i=0;i<startDow;i++) html+='<div class="cal-cell blank"></div>';
     for(var d=1;d<=days;d++){
-      var dstr=viewYear+'-'+pad(viewMonth+1)+'-'+pad(d), info=dates[dstr], hasSlots=!!(info&&info.hasSlots), open=!!(info&&info.hasOpen), chosen=chosenDates.has(dstr);
-      var stateClass=open?' available':(hasSlots?' sold-out':' blank no-slots');
-      var marker=open?'<span class="state-dot" aria-hidden="true"></span>':(hasSlots?'<span class="cal-status" aria-hidden="true">마감</span>':'');
-      var label=d+'일'+(open?' 예약 가능':(hasSlots?' 전체 마감':' 예약 가능한 시간 없음'))+(chosen?' 선택됨':'');
-      html+='<div class="cal-cell'+stateClass+(chosen?' chosen':'')+'" aria-label="'+label+'"'+(hasSlots?' onclick="toggleDate(\''+dstr+'\')"':'')+'><span>'+d+'</span>'+marker+'</div>';
+      var dstr=viewYear+'-'+pad(viewMonth+1)+'-'+pad(d), info=dates[dstr], opened=!!(info&&info.hasOpened), open=!!(info&&info.hasOpen), chosen=chosenDates.has(dstr);
+      var stateClass=open?' available':(opened?' sold-out':' blank no-slots');
+      var marker=open?'<span class="state-dot" aria-hidden="true"></span>':(opened?'<span class="cal-status" aria-hidden="true">마감</span>':'');
+      var label=d+'일'+(open?' 예약 가능':(opened?' 전체 마감':' 예약 가능한 시간 없음'))+(chosen?' 선택됨':'');
+      html+='<div class="cal-cell'+stateClass+(chosen?' chosen':'')+'" aria-label="'+label+'"'+(opened?' onclick="toggleDate(\''+dstr+'\')"':'')+'><span>'+d+'</span>'+marker+'</div>';
     }
     document.getElementById('calGrid').innerHTML=html;
   }
@@ -300,6 +338,7 @@
     chosenDates.clear();selectedSlotId='';
     var first=availableSlots().slice().sort(function(a,b){return(a.date+a.time).localeCompare(b.date+b.time);})[0];
     if(first) chosenDates.add(first.date);
+    syncCalendarMonths(first&&first.date);
     renderCalendar();renderDateBlocks();renderSummary();
     setTimeout(function(){document.getElementById('availabilitySection').scrollIntoView({behavior:'smooth',block:'start'});},50);
   }
@@ -314,6 +353,7 @@
   document.getElementById('reservationCode').addEventListener('keydown', function(e){ if(e.key==='Enter') verifyCode(); });
 
   renderSampleCodeStates();
+  syncCalendarMonths();
   renderCalendar();
   (function useLoggedInCode(){
     try{
