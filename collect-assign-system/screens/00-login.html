@@ -96,7 +96,7 @@
   var target = queryParams.get('for') || hashParams.get('for') || '';
   var targetConfig = {
     interviewer: { title:'인터뷰어 로그인', sub:'발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.', label:'인터뷰어 코드', placeholder:'예: INT-2027-01', samples:[{label:'인터뷰어 01',code:'INT-2027-01'},{label:'인터뷰어 02',code:'INT-2027-02'},{label:'인터뷰어 03',code:'INT-2027-03'},{label:'인터뷰어 04',code:'INT-2027-04'}], roles:['interviewer'] },
-    admin: { title:'VM 운영 관리자 로그인', sub:'발급받은 관리자 코드로 로그인해 주십시오.', label:'관리자 코드', placeholder:'예: VM-ADMIN-27', samples:[{label:'VM 운영 관리자',code:'VM-ADMIN-27'},{label:'시스템 관리자',code:'SYS-ADMIN-27'}], roles:['admin','system'] },
+    admin: { title:'VM 운영 관리자 로그인', sub:'발급받은 관리자 코드로 로그인해 주십시오.', label:'관리자 코드', placeholder:'예: VM-ADMIN-27', samples:[{label:'VM 운영 관리자',code:'VM-ADMIN-27'}], roles:['admin'] },
     callcenter: { title:'콜센터 자원봉사자 로그인', sub:'발급받은 콜센터 코드로 로그인해 주십시오.', label:'콜센터 코드', placeholder:'예: CALL-2027-01', samples:[{label:'콜센터 01',code:'CALL-2027-01'}], roles:['helpdesk'] }
   };
   var cfg = targetConfig[target];

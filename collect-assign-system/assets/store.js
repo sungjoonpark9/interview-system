@@ -51,28 +51,39 @@ window.CAStore = (function () {
       row("INT-2027-04",["IT-20261005-1900","IT-20261007-1900"])
     ];
   }
-  function connectInterviewersToTimes(interviewTimes, availability) {
-    (interviewTimes||[]).forEach(function(it){
-      var codes=(availability||[]).filter(function(a){return (a.timeIds||[]).indexOf(it.id)>=0;}).map(function(a){return a.interviewerCode;}).sort();
-      var teams=[]; for(var i=0;i+1<codes.length;i+=2) teams.push([codes[i],codes[i+1]]);
-      it.interviewerCodes=codes;
-      it.teamPairs=teams;
-      it.teams=teams.length;
+  function seedConfirmedInterviewTeams() {
+    return [
+      {teamCode:"TEAM-01",operatingTimeId:"IT-20261005-1900",interviewerCodes:["INT-2027-01","INT-2027-03"],status:"확정",reviewStatus:"",source:"local-tool-api"},
+      {teamCode:"TEAM-02",operatingTimeId:"IT-20261005-1900",interviewerCodes:["INT-2027-02","INT-2027-04"],status:"확정",reviewStatus:"",source:"local-tool-api"},
+      {teamCode:"TEAM-03",operatingTimeId:"IT-20261010-0900",interviewerCodes:["INT-2027-01","INT-2027-02"],status:"확정",reviewStatus:"",source:"local-tool-api"}
+    ];
+  }
+  function markTeamReviewNeeds(state) {
+    var availability=state.interviewerAvailability||state.availability||[];
+    (state.confirmedInterviewTeams||[]).forEach(function(team){
+      var conflict=(team.interviewerCodes||[]).some(function(code){
+        var row=availability.find(function(a){return a.interviewerCode===code;});
+        return !row||(row.timeIds||[]).indexOf(team.operatingTimeId)<0;
+      });
+      team.reviewStatus=conflict?"재검토 필요":"";
     });
-    return interviewTimes;
+    return state;
   }
   function minutes(t) { var p=t.split(":"); return Number(p[0])*60+Number(p[1]); }
   function timeText(n) { return pad2(Math.floor(n/60))+":"+pad2(n%60); }
-  function seedSlots(interviewTimes) {
+  function seedSlots(interviewTimes, confirmedTeams) {
     var slots=[];
     (interviewTimes||[]).forEach(function (it) {
+      var teams=(confirmedTeams||[]).filter(function(team){return team.operatingTimeId===it.id&&team.status==='확정';});
+      if(!teams.length)return;
+      var teamCodes=teams.map(function(team){return team.teamCode;});
+      var interviewerCodes=[]; teams.forEach(function(team){(team.interviewerCodes||[]).forEach(function(code){if(interviewerCodes.indexOf(code)<0)interviewerCodes.push(code);});});
       for(var m=minutes(it.start); m+30<=minutes(it.end); m+=40){
         var t=timeText(m), id=it.date.replace(/-/g,"")+"_"+t.replace(":","");
         slots.push({ id:id, date:it.date, time:t, blockId:it.id,
-          blockLabel:t+" 인터뷰", cap:it.teams, booked:0,
-          opened:it.teams>0,
-          interviewer:"TEAM-POOL", interviewerCodes:(it.interviewerCodes||[]).slice(), teamPairs:(it.teamPairs||[]).map(function(p){return p.slice();}),
-          status:it.teams>0?"모집중":"예약 미오픈", duration:30, transition:10 });
+          blockLabel:t+" 인터뷰", cap:teams.length, booked:0, opened:true,
+          teamCodes:teamCodes.slice(), interviewerCodes:interviewerCodes.slice(),
+          status:"모집중", duration:30, transition:10 });
       }
     });
     return slots;
@@ -87,7 +98,7 @@ window.CAStore = (function () {
       {id:"A-DEMO-5",reservationCode:"VM27-E7R3-H5N1",demoGroup:"open",slotId:""},
       {id:"A-DEMO-6",reservationCode:"VM27-F8T4-J6M2",demoGroup:"open",slotId:""},
       {id:"A-DEMO-7",reservationCode:"VM27-G9V5-L7P3",demoGroup:"close-test",slotId:""},
-      {id:"A-DEMO-8",reservationCode:"VM27-H2W6-N8R4",demoGroup:"close-test",slotId:""}
+      {id:"A-DEMO-8",reservationCode:"VM27-H2W6-N8R4",demoGroup:"manual",slotId:"",exceptionStatus:"수동배정 필요"}
     ];
     rows.forEach(function(row){
       row.times=[]; row.periods=[]; row.status=row.slotId?"예약확정":"예약전"; row.at=nowLabel();
@@ -95,6 +106,21 @@ window.CAStore = (function () {
     });
     (slots||[]).forEach(function(slot){slot.status=!slot.opened?"예약 미오픈":(slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중"));});
     return rows;
+  }
+
+  function reconcileReservations(state) {
+    var used={}; (state.slots||[]).forEach(function(slot){slot.booked=0;});
+    (state.applicants||[]).forEach(function(row){
+      if(!row.slotId)return;
+      var slot=(state.slots||[]).find(function(s){return s.id===row.slotId;});
+      if(!slot){row.exceptionStatus="수동배정 필요";return;}
+      var key=slot.id, occupied=used[key]||(used[key]=[]), valid=(slot.teamCodes||[]).indexOf(row.teamCode)>=0&&occupied.indexOf(row.teamCode)<0;
+      if(!valid)row.teamCode=(slot.teamCodes||[]).find(function(code){return occupied.indexOf(code)<0;})||"";
+      if(row.teamCode)occupied.push(row.teamCode); else row.exceptionStatus="수동배정 필요";
+      slot.booked+=1;
+    });
+    (state.slots||[]).forEach(function(slot){slot.status=slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");});
+    return state;
   }
 
   function seedFaq() {
@@ -120,22 +146,26 @@ window.CAStore = (function () {
     var approvedInterviewSchedule=seedApprovedInterviewSchedule();
     var approvedInterviewTimes=generateApprovedInterviewTimes(approvedInterviewSchedule);
     var interviewerAvailability=seedInterviewerAvailability(approvedInterviewTimes);
-    connectInterviewersToTimes(approvedInterviewTimes,interviewerAvailability);
-    var slots=seedSlots(approvedInterviewTimes);
-    return {
+    var confirmedInterviewTeams=seedConfirmedInterviewTeams();
+    var slots=seedSlots(approvedInterviewTimes,confirmedInterviewTeams);
+    var applicants=seedApplicants(slots);
+    var state={
+      dataModelVersion:2,
       approvedInterviewSchedule: approvedInterviewSchedule,
       approvedInterviewTimes: approvedInterviewTimes,
       interviewerAvailability: interviewerAvailability,
+      confirmedInterviewTeams: confirmedInterviewTeams,
       interviewTimes: approvedInterviewTimes, // 이전 화면 호환 별칭
       slots: slots,
       availability: interviewerAvailability, // 이전 화면 호환 별칭
-      applicants: seedApplicants(slots),
+      applicants: applicants,
       helpdesk: [],     // ⑤시트
       faq: seedFaq(),   // 자주 묻는 질문 (수작업 등록/삭제 가능)
       notices: seedNotices(), // 공통·역할별 공지사항
       log: [],
       lastRun: null
     };
+    reconcileReservations(state); markTeamReviewNeeds(state); return state;
   }
 
   function load() {
@@ -182,33 +212,27 @@ window.CAStore = (function () {
     var code=String(reservationCode||"").trim().toUpperCase();
     var row=(state.applicants||[]).find(function(r){return r.reservationCode===code;});
     if(row && row.slotId) return {ok:false, reason:"already", row:row};
+    if(row && row.exceptionStatus==='수동배정 필요') return {ok:false, reason:"manual", row:row};
     var slot=(state.slots||[]).find(function(s){return s.id===slotId;});
     if(!slot || !slot.opened || slot.status==="예약 미오픈" || slot.status==="마감" || slot.booked>=slot.cap) return {ok:false, reason:"full"};
     slot.booked+=1;
     slot.status=slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");
     if(!row){ row={id:"A-"+Date.now(),reservationCode:code,times:[],periods:[],slotId:"",status:""}; state.applicants.push(row); }
+    var occupied=(state.applicants||[]).filter(function(r){return r!==row&&r.slotId===slot.id;}).map(function(r){return r.teamCode;});
+    row.teamCode=(slot.teamCodes||[]).find(function(teamCode){return occupied.indexOf(teamCode)<0;})||"";
     row.slotId=slot.id; row.status="예약확정"; row.at=nowLabel();
     addLog(state,maskCode(code)+" 코드가 "+fmtDateShort(slot.date)+" "+slot.time+" 예약을 확정했습니다.");
     save(state);
     return {ok:true,row:row,slot:slot};
   }
 
-  function rebuildTeamCapacity(state) {
+  function rebuildSlotsFromConfirmedTeams(state) {
     var times=state.approvedInterviewTimes||state.interviewTimes||[];
     var availability=state.interviewerAvailability||state.availability||[];
     state.approvedInterviewTimes=times; state.interviewerAvailability=availability;
     state.interviewTimes=times; state.availability=availability;
-    connectInterviewersToTimes(times,availability);
-    var timesById={}; times.forEach(function(it){timesById[it.id]=it;});
-    (state.slots||[]).forEach(function(slot){
-      var it=timesById[slot.blockId]; if(!it)return;
-      slot.opened=slot.opened===true||it.teams>0||slot.booked>0;
-      slot.cap=it.teams;
-      slot.interviewerCodes=(it.interviewerCodes||[]).slice();
-      slot.teamPairs=(it.teamPairs||[]).map(function(p){return p.slice();});
-      slot.status=!slot.opened?"예약 미오픈":(slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중"));
-    });
-    return state;
+    state.slots=seedSlots(times,state.confirmedInterviewTeams||[]);
+    reconcileReservations(state); markTeamReviewNeeds(state); return state;
   }
 
   function normalizeSeparatedData(state) {
@@ -217,19 +241,20 @@ window.CAStore = (function () {
     if(!state.interviewerAvailability) state.interviewerAvailability=state.availability||seedInterviewerAvailability(state.approvedInterviewTimes);
     state.interviewTimes=state.approvedInterviewTimes;
     state.availability=state.interviewerAvailability;
-    connectInterviewersToTimes(state.approvedInterviewTimes,state.interviewerAvailability);
-    var existing={}; (state.slots||[]).forEach(function(slot){existing[slot.id]=slot;});
-    state.slots=seedSlots(state.approvedInterviewTimes).map(function(slot){
-      var old=existing[slot.id];
-      if(old){slot.booked=Number(old.booked||0); slot.opened=old.opened===true||Number(old.cap||0)>0||slot.booked>0; slot.status=old.status;}
-      return slot;
-    });
-    rebuildTeamCapacity(state);
+    if(state.dataModelVersion!==2){
+      state.confirmedInterviewTeams=seedConfirmedInterviewTeams();
+      state.dataModelVersion=2;
+      rebuildSlotsFromConfirmedTeams(state);
+    }else{
+      if(!state.confirmedInterviewTeams)state.confirmedInterviewTeams=[];
+      markTeamReviewNeeds(state);
+    }
     return state;
   }
 
   return {
     load: load, save: save, reset: reset, seed: seed, addLog: addLog, nowLabel: nowLabel, fmtDateShort: fmtDateShort, maskCode: maskCode,
-    reserveSlot: reserveSlot, rebuildTeamCapacity: rebuildTeamCapacity, generateApprovedInterviewTimes: generateApprovedInterviewTimes, DOW: DOW
+    reserveSlot: reserveSlot, rebuildTeamCapacity: rebuildSlotsFromConfirmedTeams, rebuildSlotsFromConfirmedTeams: rebuildSlotsFromConfirmedTeams,
+    markTeamReviewNeeds: markTeamReviewNeeds, generateApprovedInterviewTimes: generateApprovedInterviewTimes, DOW: DOW
   };
 })();

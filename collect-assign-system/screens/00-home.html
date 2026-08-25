@@ -241,13 +241,11 @@
       cards += actionCard('문의함 열기','접수된 문의를 확인하고 처리합니다.','callcenter','callcenter');
     }else if(s.role==='admin'){
       roleLabel='VM 운영 관리자';
-      desc='인터뷰어 팀 구성, 슬롯 정원, 예약 현황과 예외 상황을 관리할 수 있습니다.';
+      desc='로컬 관리도구에서 확정된 팀·슬롯과 예약 현황, 예외 상황을 확인합니다.';
       cards += actionCard('예약 운영 관리','운영타임, 팀 수, 정원과 예약 현황을 관리합니다.','admin','admin');
     }else if(s.role==='system'){
       roleLabel='시스템 관리자';
-      desc='관리자 기능과 콜센터 문의 처리 기능을 확인할 수 있습니다.';
-      cards += actionCard('관리자 워크북','배정 및 운영 현황을 관리합니다.','admin','admin');
-      cards += actionCard('문의함','콜센터 문의 처리 화면을 확인합니다.','callcenter','callcenter');
+      desc='계정·권한·설정·로그·배포 등 기술관리 역할입니다. 예약 및 인터뷰 내용은 기본 권한으로 열람하지 않습니다.';
     }else{
       roleLabel='사용자';
       desc='현재 계정에 허용된 기능을 사용할 수 있습니다.';

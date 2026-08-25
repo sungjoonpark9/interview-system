@@ -102,20 +102,31 @@ function getSession(){
   return null;
 }
 var session=getSession();
-if(!session || (session.role!=='interviewer' && session.role!=='admin' && session.role!=='system')){
+if(!session || session.role!=='interviewer'){
   location.href='00-login.html';
 }
-var params=new URLSearchParams(location.search);
-var applicantCode=params.get('code')||'-';
+var queryParams=new URLSearchParams(location.search), hashParams=new URLSearchParams((location.hash||'').replace(/^#/,''));
+var params=(queryParams.has('team')||queryParams.has('slot'))?queryParams:hashParams;
+var requestedCode=params.get('code')||'';
 var slotId=params.get('slot')||'';
+var teamCode=params.get('team')||'';
+var accessState=CAStore.load();
+var accessTeam=(accessState.confirmedInterviewTeams||[]).find(function(team){return team.teamCode===teamCode&&team.status==='확정'&&(team.interviewerCodes||[]).indexOf(session.code)>=0;});
+var accessSlot=(accessState.slots||[]).find(function(slot){return slot.id===slotId&&accessTeam&&slot.blockId===accessTeam.operatingTimeId;});
+var accessRow=(accessState.applicants||[]).find(function(row){return accessSlot&&row.reservationCode===requestedCode&&row.slotId===slotId&&row.teamCode===teamCode;});
+var applicantCode=accessRow?accessRow.reservationCode:'-';
+if(!accessRow){
+  document.querySelector('.wrap').innerHTML='<div class="topline"><button class="back" type="button" onclick="goBack()" aria-label="배정 확인으로 돌아가기">‹</button><div><h1>배정을 확인할 수 없습니다</h1><div class="sub">요청한 배정 정보 또는 접근 권한을 확인해 주세요.</div></div></div><div class="notice"><strong>접근할 수 없는 배정입니다.</strong><br>현재 로그인한 인터뷰어가 포함된 확정 팀의 예약만 열 수 있습니다.</div><button class="btn secondary" type="button" onclick="goBack()">배정 확인으로 돌아가기</button>';
+}
 var KEY='vm2027_temp_memo_'+applicantCode+'_'+slotId;
 
 function initSubject(){
+  if(!accessRow)return;
   var state=CAStore.load();
   var slot=(state.slots||[]).find(function(s){return s.id===slotId;});
   document.getElementById('applicantCode').textContent=applicantCode;
   if(slot){
-    document.getElementById('slotMeta').textContent=CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+' · 담당 '+(slot.interviewer||'-');
+    document.getElementById('slotMeta').textContent=CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+' · '+teamCode;
   }
 }
 function fields(){return Array.from(document.querySelectorAll('textarea[data-label]'))}
@@ -155,10 +166,9 @@ function finishInterview(){
   try{sessionStorage.removeItem(KEY)}catch(e){}
   goBack();
 }
-function goBack(){location.href='02-interviewer-submit.html'}
+function goBack(){location.href='08-interviewer-assignments.html'}
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},1800)}
-fields().forEach(function(el){el.addEventListener('input',persist)});
-initSubject();restore();render();
+if(accessRow){fields().forEach(function(el){el.addEventListener('input',persist)});initSubject();restore();render();}
 </script>
 </body>
 </html>

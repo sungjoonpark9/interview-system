@@ -73,55 +73,32 @@ function getSession(){
 }
 
 var session=getSession();
-if(!session || (session.role!=='interviewer' && session.role!=='admin' && session.role!=='system')){
+if(!session || session.role!=='interviewer'){
   location.href='00-login.html';
 }
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 
 function renderAssignments(){
   var state=CAStore.load();
-  var rows=(state.applicants||[]).filter(function(row){
-    if(!row.slotId) return false;
-    var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
-    if(!slot) return false;
-    if(session.role==='admin'||session.role==='system') return true;
-    return slot.interviewer===session.code || (slot.interviewerCodes||[]).indexOf(session.code)>=0;
-  }).map(function(row){
-    var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
-    return {row:row,slot:slot};
-  }).sort(function(a,b){
-    return (a.slot.date+a.slot.time).localeCompare(b.slot.date+b.slot.time);
-  });
-
-  document.getElementById('countBadge').textContent='배정 '+rows.length+'명';
+  var teams=(state.confirmedInterviewTeams||[]).filter(function(team){return team.status==='확정'&&(team.interviewerCodes||[]).indexOf(session.code)>=0;});
+  teams.sort(function(a,b){var aa=(state.approvedInterviewTimes||[]).find(function(it){return it.id===a.operatingTimeId;})||{};var bb=(state.approvedInterviewTimes||[]).find(function(it){return it.id===b.operatingTimeId;})||{};return ((aa.date||'')+(aa.start||'')).localeCompare((bb.date||'')+(bb.start||''));});
+  document.getElementById('countBadge').textContent='확정팀 '+teams.length+'개';
   var el=document.getElementById('assignmentGroups');
-  if(!rows.length){
+  if(!teams.length){
     el.innerHTML='<div class="empty">아직 배정된 인터뷰 대상이 없습니다.<br>배정이 확정되면 이 화면에 표시됩니다.</div>';
     return;
   }
-
-  var groups={};
-  rows.forEach(function(x){
-    var key=x.slot.date+'|'+x.slot.time+'|'+x.slot.blockLabel;
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(x);
-  });
-
-  el.innerHTML=Object.keys(groups).map(function(key){
-    var items=groups[key], slot=items[0].slot;
-    var list=items.map(function(item){
-      var code=item.row.reservationCode||item.row.code||'-';
-      var url='10-interviewer-memo.html?code='+encodeURIComponent(code)+'&slot='+encodeURIComponent(slot.id);
-      return '<div class="target" role="button" tabindex="0" '
-        +'onclick="location.href=\''+url+'\'" '
-        +'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();location.href=\''+url+'\';}">'
-        +'<div class="code">'+code+'</div>'
-        +'<div class="meta">'+CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+'</div>'
-        +'<div class="status">'+(item.row.status||'배정완료')+'</div>'
-        +'<div class="arrow">›</div></div>';
+  el.innerHTML=teams.map(function(team){
+    var time=(state.approvedInterviewTimes||[]).find(function(it){return it.id===team.operatingTimeId;})||{};
+    var colleague=(team.interviewerCodes||[]).filter(function(code){return code!==session.code;}).join(' · ')||'-';
+    var slots=(state.slots||[]).filter(function(slot){return slot.blockId===team.operatingTimeId;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    var list=slots.map(function(slot){
+      var row=(state.applicants||[]).find(function(r){return r.slotId===slot.id&&r.teamCode===team.teamCode;});
+      if(!row)return '<div class="target" style="cursor:default"><div class="code">'+esc(slot.time)+' — 예약 없음</div><div class="meta">예약 대상 없음</div></div>';
+      var code=row.reservationCode||'-', memoState='code='+encodeURIComponent(code)+'&slot='+encodeURIComponent(slot.id)+'&team='+encodeURIComponent(team.teamCode), url='10-interviewer-memo.html?'+memoState+'#'+memoState;
+      return '<div class="target" role="button" tabindex="0" onclick="location.href=\''+url+'\'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();location.href=\''+url+'\';}"><div class="code">'+esc(slot.time)+' — '+esc(code)+'</div><div class="meta">JW Hub 메모 도우미 열기</div><div class="status">예약 확정</div><div class="arrow">›</div></div>';
     }).join('');
-    return '<div class="group"><div class="group-title">'+CAStore.fmtDateShort(slot.date)+' · '+slot.blockLabel+'</div>'
-      +'<div class="group-sub">'+items.length+'명 배정</div>'
-      +'<div class="target-list">'+list+'</div></div>';
+    return '<div class="group"><div class="group-title">'+CAStore.fmtDateShort(time.date)+' '+esc(time.start+'~'+time.end)+' · '+esc(team.teamCode)+' · 확정</div><div class="group-sub">함께하는 인터뷰어: '+esc(colleague)+(team.reviewStatus?' · '+esc(team.reviewStatus):'')+'</div><div class="target-list">'+list+'</div></div>';
   }).join('');
 }
 renderAssignments();

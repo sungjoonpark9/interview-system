@@ -169,7 +169,7 @@
 
   <div class="tabs" id="tabs">
     <button class="tab-btn active" data-tab="slots" onclick="switchTab('slots')">①운영타임<span class="cnt" id="cntSlots">0</span></button>
-    <button class="tab-btn" data-tab="avail" onclick="switchTab('avail')">②팀 구성<span class="cnt" id="cntAvail">0</span></button>
+    <button class="tab-btn" data-tab="avail" onclick="switchTab('avail')">②확정 팀<span class="cnt" id="cntAvail">0</span></button>
     <button class="tab-btn" data-tab="applicant" onclick="switchTab('applicant')">③슬롯 정원<span class="cnt" id="cntApplicant">0</span></button>
     <button class="tab-btn" data-tab="result" onclick="switchTab('result')">④예약 현황<span class="cnt" id="cntResult">0</span></button>
     <button class="tab-btn" data-tab="helpdesk" onclick="switchTab('helpdesk')">⑤예외 조정<span class="cnt" id="cntHelpdesk">0</span></button>
@@ -177,7 +177,7 @@
 
   <div class="sheet active" id="sheet-slots">
     <table>
-      <thead><tr><th>운영타임ID</th><th>날짜</th><th>운영시간</th><th>가능 인터뷰어</th><th>확정 팀 수</th><th>자료 출처</th></tr></thead>
+      <thead><tr><th>운영타임ID</th><th>날짜</th><th>운영시간</th><th>확정 팀 수</th><th>검토 상태</th><th>자료 출처</th></tr></thead>
       <tbody id="tbodySlots"></tbody>
     </table>
   </div>
@@ -223,7 +223,7 @@
     try {
       if (window.top === window.self) {
         var s = window.CAAuth && CAAuth.getSession();
-        var ok = s && (s.role === 'admin' || s.role === 'system');
+        var ok = s && s.role === 'admin';
         if (!ok) { location.href = '00-login.html'; }
       }
     } catch (e) {}
@@ -241,6 +241,7 @@
     else if(status==='마감임박') cls='p-warn';
     else if(status==='마감') cls='p-full';
     else if(status==='예약확정') cls='p-ok';
+    else if(status==='재검토 필요'||status==='수동배정 필요') cls='p-warn';
     return '<span class="pill '+cls+'">'+(status||'-')+'</span>';
   }
 
@@ -264,25 +265,28 @@
     var state = CAStore.load();
 
     document.getElementById('cntSlots').textContent = (state.approvedInterviewTimes||[]).length;
-    document.getElementById('cntAvail').textContent = (state.approvedInterviewTimes||[]).reduce(function(n,it){return n+(it.teamPairs||[]).length;},0);
+    document.getElementById('cntAvail').textContent = (state.confirmedInterviewTeams||[]).length;
     document.getElementById('cntApplicant').textContent = state.slots.length;
     var results = state.applicants.filter(function(r){return r.slotId;});
     var doneCount = results.length;
     document.getElementById('cntResult').textContent = doneCount;
-    document.getElementById('cntHelpdesk').textContent = doneCount;
+    var manualRows=state.applicants.filter(function(r){return r.exceptionStatus==='수동배정 필요';});
+    document.getElementById('cntHelpdesk').textContent = doneCount+manualRows.length;
     document.getElementById('lastRunLabel').textContent = '2인 1팀 기준 · 예약 '+doneCount+'건';
 
     // 외부에서 전달된 2시간 30분 운영타임
     var tS = document.getElementById('tbodySlots');
     tS.innerHTML = (state.approvedInterviewTimes||[]).map(function(it){
+      var teams=(state.confirmedInterviewTeams||[]).filter(function(team){return team.operatingTimeId===it.id&&team.status==='확정';});
+      var review=teams.some(function(team){return team.reviewStatus==='재검토 필요';})?'재검토 필요':(teams.length?'확정':'예약 미오픈');
       return '<tr><td>'+esc(it.id)+'</td><td>'+CAStore.fmtDateShort(it.date)+'</td><td>'+esc(it.start+'~'+it.end)+'</td>'+
-        '<td>'+esc((it.interviewerCodes||[]).join(', ')||'-')+'</td><td><b>'+Number(it.teams||0)+'팀</b></td><td>'+esc(it.source||'imported')+'</td></tr>';
+        '<td><b>'+teams.length+'팀</b></td><td>'+statusPill(review)+'</td><td>'+esc(it.source||'imported')+'</td></tr>';
     }).join('');
 
-    // 2인 인터뷰어 팀 구성
+    // 로컬 관리도구/API에서 전달된 확정 2인 팀
     var tA = document.getElementById('tbodyAvail');
-    var teamRows=[];(state.approvedInterviewTimes||[]).forEach(function(it){(it.teamPairs||[]).forEach(function(pair,i){teamRows.push({it:it,pair:pair,index:i+1});});});
-    tA.innerHTML=teamRows.length?teamRows.map(function(x){return '<tr><td>'+CAStore.fmtDateShort(x.it.date)+' '+esc(x.it.start+'~'+x.it.end)+'</td><td>팀 '+x.index+'</td><td>'+esc(x.pair.join(' · '))+'</td><td>각 시작시간 정원 1명</td></tr>';}).join(''):'<tr class="empty-row"><td colspan="4">구성 가능한 2인 팀이 없습니다.</td></tr>';
+    var teamRows=(state.confirmedInterviewTeams||[]).map(function(team){return {team:team,it:(state.approvedInterviewTimes||[]).find(function(it){return it.id===team.operatingTimeId;})||{}};});
+    tA.innerHTML=teamRows.length?teamRows.map(function(x){return '<tr><td>'+CAStore.fmtDateShort(x.it.date)+' '+esc(x.it.start+'~'+x.it.end)+'</td><td>'+esc(x.team.teamCode)+'</td><td>'+esc((x.team.interviewerCodes||[]).join(' · '))+'</td><td>'+statusPill(x.team.reviewStatus||x.team.status)+'</td></tr>';}).join(''):'<tr class="empty-row"><td colspan="4">로컬 관리도구에서 전달된 확정 팀이 없습니다.</td></tr>';
 
     // 팀 수를 기준으로 생성된 예약 슬롯
     var tP = document.getElementById('tbodyApplicant');
@@ -290,7 +294,7 @@
 
     // 자원봉사자가 직접 확정한 예약
     var tR = document.getElementById('tbodyResult');
-    if(results.length===0){
+    if(results.length===0&&manualRows.length===0){
       tR.innerHTML = '<tr class="empty-row"><td colspan="5">아직 확정된 예약이 없습니다.</td></tr>';
     } else {
       tR.innerHTML = results.map(function(r){
@@ -304,7 +308,7 @@
     if(results.length===0){
       tH.innerHTML = '<tr class="empty-row"><td colspan="4">조정할 확정 예약이 없습니다.</td></tr>';
     } else {
-      tH.innerHTML = results.map(function(r){var s=state.slots.find(function(x){return x.id===r.slotId;});return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+(s?CAStore.fmtDateShort(s.date)+' '+esc(s.time):esc(r.slotId))+'</td><td>'+statusPill(r.status)+'</td><td><button class="resetbtn" onclick="releaseReservation(\''+r.reservationCode+'\')">예약 해제</button></td></tr>';}).join('');
+      tH.innerHTML = results.concat(manualRows).map(function(r){var s=state.slots.find(function(x){return x.id===r.slotId;});return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+(s?CAStore.fmtDateShort(s.date)+' '+esc(s.time):(r.exceptionStatus||'-'))+'</td><td>'+statusPill(r.exceptionStatus||r.status)+'</td><td>'+(r.slotId?'<button class="resetbtn" onclick="releaseReservation(\''+r.reservationCode+'\')">예약 해제</button>':'로컬 관리도구에서 수동배정')+'</td></tr>';}).join('');
     }
 
     // 로그

@@ -307,7 +307,7 @@
     const existing=state.interviewerAvailability.find(function(a){ return a.interviewerCode===interviewerCode; });
     if(existing) Object.assign(existing,row); else state.interviewerAvailability.push(row);
     state.availability=state.interviewerAvailability;
-    CAStore.rebuildTeamCapacity(state);
+    CAStore.markTeamReviewNeeds(state);
     CAStore.addLog(state, CAStore.maskCode(interviewerCode)+' 인터뷰어 코드로 '+timeIds.length+'개 운영타임이 제출되었습니다.');
     CAStore.save(state);
 

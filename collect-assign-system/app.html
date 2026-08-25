@@ -247,12 +247,12 @@
 <script src="assets/auth.js?v=20260825-6"></script>
 <script>
   var SCREENS = {
-    home:        { title: '홈', src: 'screens/00-home.html?v=20260825-3' },
-    applicant:   { title: '인터뷰 예약', src: 'screens/01-applicant-submit.html?v=20260825-7' },
+    home:        { title: '홈', src: 'screens/00-home.html?v=20260825-4' },
+    applicant:   { title: '인터뷰 예약', src: 'screens/01-applicant-submit.html?v=20260825-8' },
     volunteerAssignment: { title: '예약 확인', src: 'screens/11-volunteer-assignment.html?v=20260825-2' },
-    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260825-3' },
-    assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260825-1' },
-    admin:       { title: '인터뷰 예약 운영 관리', src: 'screens/03-admin-workbook.html?v=20260825-1' },
+    interviewer: { title: '가능시간 입력', src: 'screens/02-interviewer-submit.html?v=20260825-4' },
+    assignment:  { title: '배정 확인', src: 'screens/08-interviewer-assignments.html?v=20260825-3' },
+    admin:       { title: '인터뷰 예약 운영 관리', src: 'screens/03-admin-workbook.html?v=20260825-2' },
     callcenter:  { title: '콜센터 문의 처리', src: 'screens/06-callcenter.html?v=20260824-11' },
     inquiry:     { title: '도움말', src: 'screens/07-notices.html?v=20260824-6' }
   };
@@ -274,9 +274,9 @@
      - VM 관리자(로그인): 관리자 권한 범위의 메뉴를 이용.
   --------------------------------------------------------------- */
   function isAuthorizedFor(id){
-    if (id === 'interviewer' || id === 'assignment') return !!session && (session.role === 'interviewer' || session.role === 'admin' || session.role === 'system');
-    if (id === 'admin') return !!session && (session.role === 'admin' || session.role === 'system');
-    if (id === 'callcenter') return !!session && ['helpdesk','admin','system'].indexOf(session.role) >= 0;
+    if (id === 'interviewer' || id === 'assignment') return !!session && session.role === 'interviewer';
+    if (id === 'admin') return !!session && session.role === 'admin';
+    if (id === 'callcenter') return !!session && ['helpdesk','admin'].indexOf(session.role) >= 0;
     return true;
   }
 
@@ -300,7 +300,7 @@
     if(session.role==='interviewer') return ['home','interviewer','assignment','inquiry'];
     if(session.role==='helpdesk') return ['home','callcenter','inquiry'];
     if(session.role==='admin') return ['home','admin','inquiry'];
-    if(session.role==='system') return ['home','admin','callcenter','inquiry'];
+    if(session.role==='system') return ['home','inquiry'];
 
     return ['home','inquiry'];
   }
@@ -355,7 +355,8 @@
     if(session.role==='volunteer') return volunteerHasAssignment() ? 'volunteerAssignment' : 'applicant';
     if(session.role==='interviewer') return 'interviewer';
     if(session.role==='helpdesk') return 'callcenter';
-    if(session.role==='admin'||session.role==='system') return 'admin';
+    if(session.role==='admin') return 'admin';
+    if(session.role==='system') return 'home';
     return 'home';
   }
   function homeFrameSrc(){
