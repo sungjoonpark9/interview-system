@@ -1,116 +1,87 @@
 /* ============================================================
-   VM 인터뷰 배정 — 수집·배정형 데모 공유 저장소
-   실제로는 Excel 워크북 5개 시트(①슬롯마스터~⑤헬프데스크)가 하는 역할을
-   브라우저 localStorage로 흉내 냅니다. "배정 실행" 버튼은
-   scripts/assignment-office-script.ts와 동일한 로직을 자바스크립트로 옮긴 것입니다.
-   ※ 실제 Excel Office Script가 아닌 시연용 시뮬레이션입니다.
+   VM 인터뷰 예약 운영 데모 공유 저장소
+   외부에서 전달된 인터뷰어 운영타임을 2인 팀과 예약 슬롯 정원으로 연결하고,
+   자원봉사자가 직접 확정한 예약 상태를 브라우저 localStorage로 흉내 냅니다.
    ============================================================ */
 window.CAStore = (function () {
-  var KEY = "vm2027_collectassign_code_demo_v3";
+  var KEY = "vm2027_collectassign_code_demo_v6";
   var DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
-  /* ---------- 요일별 고정 인터뷰 가능 블록 (1차 인터뷰어 활동 기간 기준) ----------
-     월~금 19:00-21:30, 토/일요일 각 4개 블록. 이 블록들이 활동 기간(PERIOD_START~PERIOD_END)
-     동안 해당 요일마다 반복되며, 반복되는 매 날짜가 각각 하나의 배정 슬롯이 됩니다. */
-  var PERIOD_START = "2026-10-01";
-  var PERIOD_END = "2026-10-31";
-  var WEEKLY_BLOCKS = [
-    { id: "mon", dow: 1, label: "월요일", range: "19:00-21:30", start: "19:00" },
-    { id: "tue", dow: 2, label: "화요일", range: "19:00-21:30", start: "19:00" },
-    { id: "wed", dow: 3, label: "수요일", range: "19:00-21:30", start: "19:00" },
-    { id: "thu", dow: 4, label: "목요일", range: "19:00-21:30", start: "19:00" },
-    { id: "fri", dow: 5, label: "금요일", range: "19:00-21:30", start: "19:00" },
-    { id: "sat1", dow: 6, label: "토요일", range: "09:00-11:30", start: "09:00" },
-    { id: "sat2", dow: 6, label: "토요일", range: "13:00-15:30", start: "13:00" },
-    { id: "sat3", dow: 6, label: "토요일", range: "16:00-18:30", start: "16:00" },
-    { id: "sat4", dow: 6, label: "토요일", range: "19:30-22:00", start: "19:30" },
-    { id: "sun1", dow: 0, label: "일요일", range: "09:00-11:30", start: "09:00" },
-    { id: "sun2", dow: 0, label: "일요일", range: "13:00-15:30", start: "13:00" },
-    { id: "sun3", dow: 0, label: "일요일", range: "16:00-18:30", start: "16:00" },
-    { id: "sun4", dow: 0, label: "일요일", range: "19:30-22:00", start: "19:30" }
-  ];
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
-  function blockById(id) {
-    for (var i = 0; i < WEEKLY_BLOCKS.length; i++) if (WEEKLY_BLOCKS[i].id === id) return WEEKLY_BLOCKS[i];
-    return null;
+
+  /* 1차 목업에서는 Excel → 로컬 관리도구 → API를 거쳐 전달된 결과가
+     이미 앱에 들어온 상태로 시작합니다. 앱 안에는 운영타임을 등록하는 UI가 없습니다. */
+  function seedInterviewTimes() {
+    return [
+      { id:"IT-20261005-1900", date:"2026-10-05", start:"19:00", end:"21:30", source:"imported" },
+      { id:"IT-20261007-1900", date:"2026-10-07", start:"19:00", end:"21:30", source:"imported" },
+      { id:"IT-20261010-0900", date:"2026-10-10", start:"09:00", end:"11:30", source:"imported" }
+    ];
   }
-  function blockLabel(id) {
-    var b = blockById(id);
-    return b ? (b.label + " " + b.range) : id;
-  }
-  function periodDates() {
-    var out = [];
-    var d = new Date(PERIOD_START + "T00:00:00");
-    var end = new Date(PERIOD_END + "T00:00:00");
-    while (d <= end) {
-      out.push(d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()));
-      d.setDate(d.getDate() + 1);
+  function seedInterviewerAvailability(interviewTimes) {
+    var byId={}; (interviewTimes||[]).forEach(function(it){byId[it.id]=it;});
+    function row(code,timeIds){
+      return {interviewerCode:code,timeIds:timeIds.slice(),times:timeIds.map(function(id){var it=byId[id];return it.date+" "+it.start;}),source:"imported",at:nowLabel()};
     }
-    return out;
+    return [
+      row("INT-2027-01",["IT-20261005-1900","IT-20261010-0900"]),
+      row("INT-2027-02",["IT-20261005-1900","IT-20261010-0900"]),
+      row("INT-2027-03",["IT-20261005-1900","IT-20261007-1900"]),
+      row("INT-2027-04",["IT-20261005-1900","IT-20261007-1900"])
+    ];
   }
-  function blockOccurrenceDates(blockId) {
-    var b = blockById(blockId);
-    if (!b) return [];
-    return periodDates().filter(function (dstr) {
-      return new Date(dstr + "T00:00:00").getDay() === b.dow;
+  function connectInterviewersToTimes(interviewTimes, availability) {
+    (interviewTimes||[]).forEach(function(it){
+      var codes=(availability||[]).filter(function(a){return (a.timeIds||[]).indexOf(it.id)>=0;}).map(function(a){return a.interviewerCode;}).sort();
+      var teams=[]; for(var i=0;i+1<codes.length;i+=2) teams.push([codes[i],codes[i+1]]);
+      it.interviewerCodes=codes;
+      it.teamPairs=teams;
+      it.teams=teams.length;
     });
+    return interviewTimes;
   }
-  // 선택한 블록ID들을 "그 블록이 활동 기간 동안 반복되는 모든 날짜 + 시작시간" 목록으로 펼침
-  function expandBlockIds(blockIds) {
-    var out = [];
-    (blockIds || []).forEach(function (id) {
-      var b = blockById(id);
-      if (!b) return;
-      blockOccurrenceDates(id).forEach(function (dstr) { out.push(dstr + " " + b.start); });
-    });
-    return out;
-  }
-  // 특정 날짜(dstr)의 요일에 해당하는 고정 시간대 블록 목록 (달력에서 날짜를 고르면 이걸로 보여줌)
-  function blockRangeForDate(dstr) {
-    var dow = new Date(dstr + "T00:00:00").getDay();
-    return WEEKLY_BLOCKS.filter(function (b) { return b.dow === dow; });
-  }
-
-  // 자원봉사자 화면은 개별 시간 대신 오전·오후 단위로 간단히 선택합니다.
-  // 선택된 오전·오후는 배정 시 실제 인터뷰 블록으로 펼쳐집니다.
-  function applicantPeriodsForDate(dstr) {
-    var blocks = blockRangeForDate(dstr);
-    var periods = [];
-    var am = blocks.filter(function (b) { return Number(b.start.slice(0, 2)) < 12; });
-    var pm = blocks.filter(function (b) { return Number(b.start.slice(0, 2)) >= 12; });
-    if (am.length) periods.push({ id: "AM", label: "오전", blocks: am });
-    if (pm.length) periods.push({ id: "PM", label: "오후", blocks: pm });
-    return periods;
-  }
-  // 날짜+시작시간으로 사람이 읽을 블록 라벨 찾기 (예: "월요일 19:00-21:30")
-  function blockLabelForDateTime(dstr, t) {
-    var blocks = blockRangeForDate(dstr);
-    for (var i = 0; i < blocks.length; i++) if (blocks[i].start === t) return blocks[i].label + " " + blocks[i].range;
-    return t;
-  }
-
-  function seedSlots() {
-    var slots = [];
-    WEEKLY_BLOCKS.forEach(function (b) {
-      blockOccurrenceDates(b.id).forEach(function (dstr) {
-        var mmdd = dstr.slice(0, 4) + dstr.slice(5, 7) + dstr.slice(8, 10);
-        slots.push({
-          id: mmdd + "_" + b.start.replace(":", ""),
-          date: dstr, time: b.start, blockId: b.id, blockLabel: b.label + " " + b.range,
-          cap: 3, booked: 0, interviewer: "", status: "배정검토중"
-        });
-      });
+  function minutes(t) { var p=t.split(":"); return Number(p[0])*60+Number(p[1]); }
+  function timeText(n) { return pad2(Math.floor(n/60))+":"+pad2(n%60); }
+  function seedSlots(interviewTimes) {
+    var slots=[];
+    (interviewTimes||[]).forEach(function (it) {
+      for(var m=minutes(it.start); m+30<=minutes(it.end); m+=40){
+        var t=timeText(m), id=it.date.replace(/-/g,"")+"_"+t.replace(":","");
+        slots.push({ id:id, date:it.date, time:t, blockId:it.id,
+          blockLabel:t+" 인터뷰", cap:it.teams, booked:0,
+          interviewer:"TEAM-POOL", interviewerCodes:(it.interviewerCodes||[]).slice(), teamPairs:(it.teamPairs||[]).map(function(p){return p.slice();}),
+          status:it.teams>0?"모집중":"마감", duration:30, transition:10 });
+      }
     });
     return slots;
   }
 
+  function seedApplicants(slots) {
+    var rows=[
+      {id:"A-DEMO-1",reservationCode:"VM27-A7K9-P2Q4",demoGroup:"reserved",slotId:"20261005_1900"},
+      {id:"A-DEMO-2",reservationCode:"VM27-B3M8-R6T1",demoGroup:"reserved",slotId:"20261005_1940"},
+      {id:"A-DEMO-3",reservationCode:"VM27-C5N2-X8W7",demoGroup:"reserved",slotId:"20261010_0900"},
+      {id:"A-DEMO-4",reservationCode:"VM27-D4P6-Y2K8",demoGroup:"open",slotId:""},
+      {id:"A-DEMO-5",reservationCode:"VM27-E7R3-H5N1",demoGroup:"open",slotId:""},
+      {id:"A-DEMO-6",reservationCode:"VM27-F8T4-J6M2",demoGroup:"open",slotId:""},
+      {id:"A-DEMO-7",reservationCode:"VM27-G9V5-L7P3",demoGroup:"close-test",slotId:""},
+      {id:"A-DEMO-8",reservationCode:"VM27-H2W6-N8R4",demoGroup:"close-test",slotId:""}
+    ];
+    rows.forEach(function(row){
+      row.times=[]; row.periods=[]; row.status=row.slotId?"예약확정":"예약전"; row.at=nowLabel();
+      if(row.slotId){var slot=(slots||[]).find(function(s){return s.id===row.slotId;});if(slot)slot.booked+=1;}
+    });
+    (slots||[]).forEach(function(slot){slot.status=slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");});
+    return rows;
+  }
+
   function seedFaq() {
     return [
-      { id: "F-2", audience:"volunteer", q: "가능한 날짜는 어떻게 선택하나요?", a: "최대 1주일 범위에서 날짜별 오전·오후를 선택할 수 있습니다. 같은 날 오전과 오후를 모두 선택할 수 있습니다.", at: nowLabel() },
-      { id: "F-3", audience:"all", q: "제출한 가능 시간이 왜 바로 확정되지 않나요?", a: "여러 사람이 제출한 가능 시간을 담당자가 모아 배정하므로 제출 즉시 확정되지 않습니다.", at: nowLabel() },
-      { id: "F-4", audience:"volunteer", q: "언제 배정 결과를 알 수 있나요?", a: "담당자가 배정을 실행하고 최종 확인한 뒤 앱의 일정 화면과 승인된 안내 채널을 통해 알려드립니다.", at: nowLabel() },
+      { id: "F-2", audience:"volunteer", q: "인터뷰 시간은 어떻게 예약하나요?", a: "예약코드로 로그인한 뒤 현재 정원이 남은 날짜와 시작시간 중 하나를 직접 선택합니다.", at: nowLabel() },
+      { id: "F-3", audience:"all", q: "예약시간은 어떤 기준으로 만들어지나요?", a: "Excel/로컬 관리도구에서 전달된 2시간 30분 운영 타임을 30분 인터뷰와 10분 전환 간격으로 나누어 표시합니다.", at: nowLabel() },
+      { id: "F-4", audience:"volunteer", q: "확정한 예약은 어디에서 확인하나요?", a: "같은 예약코드로 로그인하면 예약 확인 화면에서 확정된 날짜와 시작시간을 확인할 수 있습니다.", at: nowLabel() },
       { id: "F-5", audience:"volunteer", q: "가족과 함께 인터뷰를 받을 수 있나요?", a: "자원봉사자 면접은 개별 면접이 원칙입니다. 각자 예약코드로 가능한 시간을 제출해 주십시오.", at: nowLabel() },
-      { id: "F-6", audience:"all", q: "제출 후 내용을 수정하고 싶습니다.", a: "제출 마감 전에는 같은 코드로 다시 접속해 수정할 수 있습니다. 배정 확정 후에는 헬프데스크에서 변경을 요청해 주십시오.", at: nowLabel() },
+      { id: "F-6", audience:"all", q: "예약을 변경하고 싶습니다.", a: "예약 확정 후 변경이 필요하면 문의하기에서 예약코드 기준으로 요청해 주십시오.", at: nowLabel() },
       { id: "F-7", audience:"interviewer", q: "인터뷰어 가용시간을 변경하려면 어떻게 하나요?", a: "제출 마감 전에는 같은 인터뷰어 코드로 다시 접속해 수정할 수 있습니다. 배정 후에는 헬프데스크로 요청해 주십시오.", at: nowLabel() }
     ];
   }
@@ -118,16 +89,21 @@ window.CAStore = (function () {
   function seedNotices() {
     var now = Date.now();
     return [
-      { id:"N-1", audience:"all", title:"인터뷰 가능시간 제출 안내", body:"가능한 날짜와 오전·오후를 최대한 많이 선택해 주십시오.", createdAt:now, endsAt:"" },
+      { id:"N-1", audience:"all", title:"인터뷰 예약 안내", body:"예약코드로 로그인해 현재 예약 가능한 인터뷰 시간 하나를 선택해 주십시오.", createdAt:now, endsAt:"" },
       { id:"N-2", audience:"interviewer", title:"인터뷰어 가용시간 확인", body:"기존에 제출한 가용시간을 확인하고 변경이 있으면 수정해 주십시오.", createdAt:now, endsAt:"" }
     ];
   }
 
   function seed() {
+    var interviewTimes=seedInterviewTimes();
+    var availability=seedInterviewerAvailability(interviewTimes);
+    connectInterviewersToTimes(interviewTimes,availability);
+    var slots=seedSlots(interviewTimes);
     return {
-      slots: seedSlots(),
-      availability: [], // 인터뷰어 제출 원본 (②시트)
-      applicants: [],   // 지원자 제출 원본 (③시트)
+      interviewTimes: interviewTimes,
+      slots: slots,
+      availability: availability, // 외부에서 전달된 인터뷰어별 2시간 30분 운영타임
+      applicants: seedApplicants(slots),
       helpdesk: [],     // ⑤시트
       faq: seedFaq(),   // 자주 묻는 질문 (수작업 등록/삭제 가능)
       notices: seedNotices(), // 공통·역할별 공지사항
@@ -174,72 +150,36 @@ window.CAStore = (function () {
     return "••••-" + value.slice(-4);
   }
 
-  /* ---------- 배정 실행 — assignment-office-script.ts 와 동일 로직 ---------- */
-  function runAssignment(state) {
-    var slotByKey = {};
-    state.slots.forEach(function (s) { slotByKey[s.date + "_" + s.time] = s; });
+  function reserveSlot(state, reservationCode, slotId) {
+    var code=String(reservationCode||"").trim().toUpperCase();
+    var row=(state.applicants||[]).find(function(r){return r.reservationCode===code;});
+    if(row && row.slotId) return {ok:false, reason:"already", row:row};
+    var slot=(state.slots||[]).find(function(s){return s.id===slotId;});
+    if(!slot || slot.status==="마감" || slot.booked>=slot.cap) return {ok:false, reason:"full"};
+    slot.booked+=1;
+    slot.status=slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");
+    if(!row){ row={id:"A-"+Date.now(),reservationCode:code,times:[],periods:[],slotId:"",status:""}; state.applicants.push(row); }
+    row.slotId=slot.id; row.status="예약확정"; row.at=nowLabel();
+    addLog(state,maskCode(code)+" 코드가 "+fmtDateShort(slot.date)+" "+slot.time+" 예약을 확정했습니다.");
+    save(state);
+    return {ok:true,row:row,slot:slot};
+  }
 
-    // 1) 인터뷰어 가용시간(요일별 블록이 활동 기간 동안 펼쳐진 날짜/시간 목록) -> 슬롯 배정
-    state.availability.forEach(function (a) {
-      var dailyCount = {}; // 같은 인터뷰어의 "하루 최대 가능횟수" 제한용 (날짜 기준)
-      (a.times || []).forEach(function (w) {
-        var spaceIdx = w.indexOf(" ");
-        if (spaceIdx === -1) return;
-        var d = w.slice(0, spaceIdx), t = w.slice(spaceIdx + 1);
-        var already = dailyCount[d] || 0;
-        if (already >= (a.maxDay || 99)) return;
-        var slot = slotByKey[d + "_" + t];
-        if (!slot) return;
-        if (slot.interviewer) return;
-        slot.interviewer = a.interviewerCode;
-        slot.cap = Math.max(1, Number((a.capacities || {})[w]) || Number(a.defaultCapacity) || Number(a.maxDay) || 1);
-        slot.status = "모집중";
-        dailyCount[d] = already + 1;
-      });
+  function rebuildTeamCapacity(state) {
+    connectInterviewersToTimes(state.interviewTimes||[],state.availability||[]);
+    var timesById={}; (state.interviewTimes||[]).forEach(function(it){timesById[it.id]=it;});
+    (state.slots||[]).forEach(function(slot){
+      var it=timesById[slot.blockId]; if(!it)return;
+      slot.cap=it.teams;
+      slot.interviewerCodes=(it.interviewerCodes||[]).slice();
+      slot.teamPairs=(it.teamPairs||[]).map(function(p){return p.slice();});
+      slot.status=slot.cap<=0||slot.booked>=slot.cap?"마감":((slot.cap-slot.booked)/slot.cap<=0.34?"마감임박":"모집중");
     });
-
-    // 2) 지원자 배정 (가능시간 적은 순)
-    var order = state.applicants
-      .map(function (row, i) { return { row: row, count: (row.times || []).length }; })
-      .sort(function (a, b) { return a.count - b.count; });
-
-    order.forEach(function (o) {
-      var row = o.row;
-      if (row.slotId) return;
-      var assigned = false;
-      (row.times || []).some(function (w) {
-        var spaceIdx = w.indexOf(" ");
-        if (spaceIdx === -1) return false;
-        var d = w.slice(0, spaceIdx), t = w.slice(spaceIdx + 1);
-        var slot = slotByKey[d + "_" + t];
-        if (!slot) return false;
-        if (!slot.interviewer) return false;
-        // 정원의 일부를 예외·변경 대응 여유로 남깁니다. 초기값은 70%이며 운영 중 조정 가능합니다.
-        var targetCap = Math.max(1, Math.floor(slot.cap * 0.7));
-        if (slot.booked >= targetCap) return false;
-        slot.booked += 1;
-        var remain = targetCap - slot.booked;
-        slot.status = remain <= 0 ? "자동배정완료" : (remain / targetCap <= 0.34 ? "마감임박" : "모집중");
-        row.slotId = slot.id;
-        row.status = "배정완료";
-        assigned = true;
-        return true;
-      });
-      if (!assigned) row.status = "수동조율필요";
-    });
-
-    var successCount = state.applicants.filter(function (r) { return r.status === "배정완료"; }).length;
-    var manualCount = state.applicants.filter(function (r) { return r.status === "수동조율필요"; }).length;
-    state.lastRun = nowLabel();
-    addLog(state, "배정 실행 — 배정완료 " + successCount + "건 · 수동조율필요 " + manualCount + "건");
-    return { successCount: successCount, manualCount: manualCount };
+    return state;
   }
 
   return {
     load: load, save: save, reset: reset, seed: seed, addLog: addLog, nowLabel: nowLabel, fmtDateShort: fmtDateShort, maskCode: maskCode,
-    runAssignment: runAssignment, DOW: DOW,
-    WEEKLY_BLOCKS: WEEKLY_BLOCKS, PERIOD_START: PERIOD_START, PERIOD_END: PERIOD_END,
-    blockById: blockById, blockLabel: blockLabel, blockOccurrenceDates: blockOccurrenceDates, expandBlockIds: expandBlockIds,
-    blockRangeForDate: blockRangeForDate, applicantPeriodsForDate: applicantPeriodsForDate, blockLabelForDateTime: blockLabelForDateTime
+    reserveSlot: reserveSlot, rebuildTeamCapacity: rebuildTeamCapacity, DOW: DOW
   };
 })();

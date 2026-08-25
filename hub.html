@@ -191,8 +191,8 @@
 
 <script>
 var SCREENS = [
-  {grp:'신청자 · 문의자', id:'01-applicant-form', title:'예약하기 · 문의하기', sub:'로그인 없이 누구나 접속', role:'신청자'},
-  {grp:'신청자 · 문의자', id:'06-faq', title:'자주 묻는 질문', sub:'FAQ', role:'신청자'},
+  {grp:'자원봉사자', id:'01-applicant-form', title:'예약하기 · 문의하기', sub:'예약코드로 접속', role:'자원봉사자'},
+  {grp:'자원봉사자', id:'06-faq', title:'자주 묻는 질문', sub:'FAQ', role:'자원봉사자'},
   {grp:'로그인', id:'login', title:'인터뷰어·관리자 로그인', sub:'등록된 이메일로 접속', role:'로그인'},
   {grp:'인터뷰어', id:'03-interviewer-availability', title:'가능한 날짜 알려주기', sub:'날짜 + 하루 최대 가능 횟수', role:'인터뷰어'},
   {grp:'인터뷰어', id:'04-interviewer-dashboard', title:'내 배정 확인', sub:'관리자가 배정한 실제 시간 확인', role:'인터뷰어'},
@@ -210,9 +210,9 @@ var burger = document.getElementById('burger');
 var scrim = document.getElementById('scrim');
 
 // ---------- 사이드바 렌더 ----------
-// 역할 그룹별 구분 색 — 신청자(블루) · 로그인(퍼플) · 인터뷰어(그린) · 관리자(앰버)
+// 역할 그룹별 구분 색 — 자원봉사자(블루) · 로그인(퍼플) · 인터뷰어(그린) · 관리자(앰버)
 var GRP_COLORS = {
-  '신청자 · 문의자': '#0071e3',
+  '자원봉사자': '#0071e3',
   '로그인': '#6264a7',
   '인터뷰어': '#1c8c5e',
   'VM 관리자': '#b25c00'
@@ -220,7 +220,7 @@ var GRP_COLORS = {
 var html = '<a class="nav" href="app.html" style="border-left-color:#0071e333; margin-bottom:10px; background:var(--color-off-black);">' +
         '<span class="dot" style="background:#fff;"></span>' +
         '<span class="tx"><span class="t" style="color:#fff;">앱 형태로 한 화면에서 보기</span>' +
-        '<span class="s" style="color:rgba(255,255,255,0.65);">신청자·인터뷰어·관리자 하단 탭 모바일 앱 데모</span></span></a>' +
+        '<span class="s" style="color:rgba(255,255,255,0.65);">자원봉사자·인터뷰어·관리자 하단 탭 모바일 앱 데모</span></span></a>' +
         '<div class="sep"></div>';
 var lastGrp = null;
 SCREENS.forEach(function(s){
@@ -236,7 +236,7 @@ SCREENS.forEach(function(s){
 });
 html += '<div class="sep"></div>' +
         '<div class="note">표시가 있는 4개 화면(예약하기·가능한 시간 알려주기·배정 시간 확인·예약시스템)은 ' +
-        '브라우저에 저장되는 연동 데모입니다. 인터뷰어가 시간을 알려주면 관리자·신청자 화면에 실제로 반영됩니다. ' +
+        '브라우저에 저장되는 연동 데모입니다. 예약 결과가 관리자·자원봉사자 화면에 실제로 반영됩니다. ' +
         '나머지 화면은 정적 목업입니다. 상단 "데모 초기화"로 언제든 처음 상태로 되돌릴 수 있습니다.</div>' +
         '<div class="sep"></div>' +
         '<a class="nav" href="collect-assign-system/index.html" target="_blank" rel="noopener" style="border-left-color:#0071e333;">' +

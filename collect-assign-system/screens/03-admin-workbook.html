@@ -131,8 +131,8 @@
 <div class="topbar">
   <div class="brand">
     <div>
-      <h1>배정 관리 워크북</h1>
-      <div class="sub">실제 Excel 워크북의 5개 시트를 그대로 흉내 낸 화면입니다 · "배정 실행"이 Office Script와 같은 로직을 돌립니다</div>
+      <h1>인터뷰 예약 운영 관리</h1>
+      <div class="sub">인터뷰어 운영타임과 팀 수를 기준으로 슬롯 정원·예약 현황·예외 상황을 관리합니다</div>
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
@@ -146,13 +146,9 @@
   
   <div class="toolbar">
     <div class="toolbar-left">
-      <button class="runbtn" onclick="runAssignment()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        배정 실행
-      </button>
-      <button class="resetbtn" onclick="importSurveySample()">기존 인터뷰어 설문 반영(샘플)</button>
-      <button class="resetbtn" onclick="downloadResults()">배정 결과 CSV</button>
-      <span class="lastrun" id="lastRunLabel">아직 실행 전</span>
+      <button class="runbtn" onclick="render()">현황 새로고침</button>
+      <button class="resetbtn" onclick="downloadResults()">예약 현황 CSV</button>
+      <span class="lastrun" id="lastRunLabel">팀 수 기준 정원 적용 중</span>
     </div>
     <button class="resetbtn" onclick="resetDemo()">데모 초기화</button>
   </div>
@@ -163,51 +159,50 @@
   <div class="status-guide" aria-label="상태 설명">
     <div class="status-guide-title">상태 안내</div>
     <div class="status-guide-list">
-      <span><i class="status-dot ok"></i><b>모집중</b> 배정 가능한 정원이 충분합니다</span>
+      <span><i class="status-dot ok"></i><b>모집중</b> 예약 가능한 정원이 남아 있습니다</span>
       <span><i class="status-dot warn"></i><b>마감임박</b> 남은 정원이 많지 않습니다</span>
       <span><i class="status-dot full"></i><b>마감</b> 현재 정원이 모두 찼습니다</span>
-      <span><i class="status-dot idle"></i><b>배정대기</b> 아직 배정 실행 전이거나 검토 중입니다</span>
-      <span><i class="status-dot ok"></i><b>배정완료</b> 인터뷰 일정이 배정되었습니다</span>
-      <span><i class="status-dot warn"></i><b>수동조율필요</b> 자동배정이 어려워 관리자의 확인이 필요합니다</span>
+      <span><i class="status-dot idle"></i><b>예약전</b> 아직 예약을 확정하지 않았습니다</span>
+      <span><i class="status-dot ok"></i><b>예약확정</b> 자원봉사자가 시간을 직접 예약했습니다</span>
     </div>
   </div>
 
   <div class="tabs" id="tabs">
-    <button class="tab-btn active" data-tab="slots" onclick="switchTab('slots')">①슬롯마스터<span class="cnt" id="cntSlots">0</span></button>
-    <button class="tab-btn" data-tab="avail" onclick="switchTab('avail')">②인터뷰어가용시간<span class="cnt" id="cntAvail">0</span></button>
-    <button class="tab-btn" data-tab="applicant" onclick="switchTab('applicant')">③자원봉사자접수<span class="cnt" id="cntApplicant">0</span></button>
-    <button class="tab-btn" data-tab="result" onclick="switchTab('result')">④배정결과<span class="cnt" id="cntResult">0</span></button>
-    <button class="tab-btn" data-tab="helpdesk" onclick="switchTab('helpdesk')">⑤문의함<span class="cnt" id="cntHelpdesk">0</span></button>
+    <button class="tab-btn active" data-tab="slots" onclick="switchTab('slots')">①운영타임<span class="cnt" id="cntSlots">0</span></button>
+    <button class="tab-btn" data-tab="avail" onclick="switchTab('avail')">②팀 구성<span class="cnt" id="cntAvail">0</span></button>
+    <button class="tab-btn" data-tab="applicant" onclick="switchTab('applicant')">③슬롯 정원<span class="cnt" id="cntApplicant">0</span></button>
+    <button class="tab-btn" data-tab="result" onclick="switchTab('result')">④예약 현황<span class="cnt" id="cntResult">0</span></button>
+    <button class="tab-btn" data-tab="helpdesk" onclick="switchTab('helpdesk')">⑤예외 조정<span class="cnt" id="cntHelpdesk">0</span></button>
   </div>
 
   <div class="sheet active" id="sheet-slots">
     <table>
-      <thead><tr><th>슬롯ID</th><th>요일·시간대</th><th>날짜</th><th>시간</th><th>정원</th><th>현재예약</th><th>인터뷰어 코드</th><th>상태</th></tr></thead>
+      <thead><tr><th>운영타임ID</th><th>날짜</th><th>운영시간</th><th>가능 인터뷰어</th><th>확정 팀 수</th><th>자료 출처</th></tr></thead>
       <tbody id="tbodySlots"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-avail">
     <table>
-      <thead><tr><th>인터뷰어 코드</th><th>기본 처리인원</th><th>선택한 날짜·시간대</th><th>생성된 가능시간</th><th>자료 출처</th><th>제출시각</th></tr></thead>
+      <thead><tr><th>날짜·운영시간</th><th>팀</th><th>인터뷰어 코드</th><th>슬롯 정원 반영</th></tr></thead>
       <tbody id="tbodyAvail"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-applicant">
     <table>
-      <thead><tr><th>예약코드</th><th>구분</th><th>가능시간</th><th>배정슬롯ID</th><th>상태</th></tr></thead>
+      <thead><tr><th>슬롯ID</th><th>날짜·시작시간</th><th>팀 기준 정원</th><th>현재 예약</th><th>잔여</th><th>상태</th><th>예외 정원 조정</th></tr></thead>
       <tbody id="tbodyApplicant"></tbody>
     </table>
   </div>
   <div class="sheet" id="sheet-result">
     <table>
-      <thead><tr><th>접수ID</th><th>예약코드</th><th>배정슬롯ID</th><th>배정날짜</th><th>배정시간</th><th>인터뷰어 코드</th></tr></thead>
+      <thead><tr><th>예약코드</th><th>예약일</th><th>시작시간</th><th>슬롯ID</th><th>상태</th></tr></thead>
       <tbody id="tbodyResult"></tbody>
     </table>
   </div>
 
   <div class="sheet" id="sheet-helpdesk">
     <table>
-      <thead><tr><th>문의유형</th><th>예약코드</th><th>상태</th><th>문의내용</th><th>답변</th><th>접수시각</th></tr></thead>
+      <thead><tr><th>예약코드</th><th>현재 예약</th><th>상태</th><th>예외 조정</th></tr></thead>
       <tbody id="tbodyHelpdesk"></tbody>
     </table>
   </div>
@@ -245,12 +240,7 @@
     if(status==='모집중') cls='p-ok';
     else if(status==='마감임박') cls='p-warn';
     else if(status==='마감') cls='p-full';
-    else if(status==='자동배정완료') cls='p-ok';
-    else if(status==='답변 완료') cls='p-ok';
-    else if(status==='처리 중') cls='p-warn';
-    else if(status==='배정완료') cls='p-ok';
-    else if(status==='수동조율필요') cls='p-warn';
-    else if(status==='배정검토중' || status==='배정대기') cls='p-idle';
+    else if(status==='예약확정') cls='p-ok';
     return '<span class="pill '+cls+'">'+(status||'-')+'</span>';
   }
 
@@ -273,74 +263,48 @@
   function render(){
     var state = CAStore.load();
 
-    document.getElementById('cntSlots').textContent = state.slots.length;
-    document.getElementById('cntAvail').textContent = state.availability.length;
-    document.getElementById('cntApplicant').textContent = state.applicants.length;
-    var doneCount = state.applicants.filter(function(r){return r.slotId;}).length;
+    document.getElementById('cntSlots').textContent = (state.interviewTimes||[]).length;
+    document.getElementById('cntAvail').textContent = (state.interviewTimes||[]).reduce(function(n,it){return n+(it.teamPairs||[]).length;},0);
+    document.getElementById('cntApplicant').textContent = state.slots.length;
+    var results = state.applicants.filter(function(r){return r.slotId;});
+    var doneCount = results.length;
     document.getElementById('cntResult').textContent = doneCount;
-    document.getElementById('cntHelpdesk').textContent = (state.helpdesk||[]).length;
+    document.getElementById('cntHelpdesk').textContent = doneCount;
+    document.getElementById('lastRunLabel').textContent = '2인 1팀 기준 · 예약 '+doneCount+'건';
 
-    document.getElementById('lastRunLabel').textContent = state.lastRun ? ('마지막 실행: '+state.lastRun) : '아직 실행 전';
-
-    // 슬롯마스터
+    // 외부에서 전달된 2시간 30분 운영타임
     var tS = document.getElementById('tbodySlots');
-    tS.innerHTML = state.slots.map(function(s){
-      return '<tr><td>'+esc(s.id)+'</td><td>'+esc(s.blockLabel||'-')+'</td><td>'+CAStore.fmtDateShort(s.date)+'</td><td>'+esc(s.time)+'</td>'+
-        '<td>'+s.cap+'</td><td>'+s.booked+'</td><td>'+(s.interviewer?esc(s.interviewer):'<span style="color:var(--gray-light)">미배정</span>')+'</td>'+
-        '<td>'+statusPill(s.status)+'</td></tr>';
+    tS.innerHTML = (state.interviewTimes||[]).map(function(it){
+      return '<tr><td>'+esc(it.id)+'</td><td>'+CAStore.fmtDateShort(it.date)+'</td><td>'+esc(it.start+'~'+it.end)+'</td>'+
+        '<td>'+esc((it.interviewerCodes||[]).join(', ')||'-')+'</td><td><b>'+Number(it.teams||0)+'팀</b></td><td>'+esc(it.source||'imported')+'</td></tr>';
     }).join('');
 
-    // 인터뷰어가용시간
+    // 2인 인터뷰어 팀 구성
     var tA = document.getElementById('tbodyAvail');
-    if(state.availability.length===0){
-      tA.innerHTML = '<tr class="empty-row"><td colspan="6">아직 제출되거나 반입된 인터뷰어 가용시간이 없습니다.</td></tr>';
-    } else {
-      tA.innerHTML = state.availability.map(function(a){
-        var seen = {};
-        (a.times||[]).forEach(function(w){
-          var sp = w.indexOf(' ');
-          if(sp===-1) return;
-          seen[CAStore.blockLabelForDateTime(w.slice(0,sp), w.slice(sp+1))] = true;
-        });
-        var blockLabels = Object.keys(seen).join(', ') || '-';
-        return '<tr><td>'+esc(CAStore.maskCode(a.interviewerCode))+'</td><td>'+esc(a.defaultCapacity||a.maxDay||'-')+'명</td>'+
-          '<td>'+esc(blockLabels)+'</td><td>'+esc((a.times||[]).length)+'개</td><td>'+esc(a.source||'직접 제출')+'</td><td>'+esc(a.at)+'</td></tr>';
-      }).join('');
-    }
+    var teamRows=[];(state.interviewTimes||[]).forEach(function(it){(it.teamPairs||[]).forEach(function(pair,i){teamRows.push({it:it,pair:pair,index:i+1});});});
+    tA.innerHTML=teamRows.length?teamRows.map(function(x){return '<tr><td>'+CAStore.fmtDateShort(x.it.date)+' '+esc(x.it.start+'~'+x.it.end)+'</td><td>팀 '+x.index+'</td><td>'+esc(x.pair.join(' · '))+'</td><td>각 시작시간 정원 1명</td></tr>';}).join(''):'<tr class="empty-row"><td colspan="4">구성 가능한 2인 팀이 없습니다.</td></tr>';
 
-    // 자원봉사자 접수
+    // 팀 수를 기준으로 생성된 예약 슬롯
     var tP = document.getElementById('tbodyApplicant');
-    if(state.applicants.length===0){
-      tP.innerHTML = '<tr class="empty-row"><td colspan="5">아직 제출된 자원봉사자가 없습니다.</td></tr>';
-    } else {
-      tP.innerHTML = state.applicants.map(function(r){
-        return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+esc(r.kind)+'</td>'+
-          '<td>'+esc((r.times||[]).length)+'건</td><td>'+(r.slotId?esc(r.slotId):'-')+'</td><td>'+statusPill(r.status)+'</td></tr>';
-      }).join('');
-    }
+    tP.innerHTML=state.slots.map(function(s){var remain=Math.max(0,s.cap-s.booked);return '<tr><td>'+esc(s.id)+'</td><td>'+CAStore.fmtDateShort(s.date)+' '+esc(s.time)+'</td><td>'+s.cap+'</td><td>'+s.booked+'</td><td>'+remain+'</td><td>'+statusPill(s.status)+'</td><td><button class="resetbtn" onclick="adjustCapacity(\''+s.id+'\',-1)">−1</button> <button class="resetbtn" onclick="adjustCapacity(\''+s.id+'\',1)">+1</button></td></tr>';}).join('');
 
-    // 배정결과
+    // 자원봉사자가 직접 확정한 예약
     var tR = document.getElementById('tbodyResult');
-    var results = state.applicants.filter(function(r){return r.slotId;});
     if(results.length===0){
-      tR.innerHTML = '<tr class="empty-row"><td colspan="6">아직 배정 결과가 없습니다. "배정 실행"을 눌러 보세요.</td></tr>';
+      tR.innerHTML = '<tr class="empty-row"><td colspan="5">아직 확정된 예약이 없습니다.</td></tr>';
     } else {
-      tR.innerHTML = results.map(function(r,i){
+      tR.innerHTML = results.map(function(r){
         var slot = state.slots.find(function(s){return s.id===r.slotId;});
-        return '<tr><td>A-'+(i+1)+'</td><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+esc(r.slotId)+'</td>'+
-          '<td>'+(slot?CAStore.fmtDateShort(slot.date):'-')+'</td><td>'+(slot?esc(slot.time):'-')+'</td><td>'+(slot?esc(CAStore.maskCode(slot.interviewer)):'-')+'</td></tr>';
+        return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+(slot?CAStore.fmtDateShort(slot.date):'-')+'</td><td>'+(slot?esc(slot.time):'-')+'</td><td>'+esc(r.slotId)+'</td><td>'+statusPill(r.status)+'</td></tr>';
       }).join('');
     }
 
-    // 문의함
+    // 취소·노쇼·일정 변경 등 예외 상황에서 예약 해제
     var tH = document.getElementById('tbodyHelpdesk');
-    var helpdesk = state.helpdesk || [];
-    if(helpdesk.length===0){
-      tH.innerHTML = '<tr class="empty-row"><td colspan="6">아직 현재 처리할 문의가 없습니다. 새 문의가 접수되면 이곳에 표시됩니다.</td></tr>';
+    if(results.length===0){
+      tH.innerHTML = '<tr class="empty-row"><td colspan="4">조정할 확정 예약이 없습니다.</td></tr>';
     } else {
-      tH.innerHTML = helpdesk.map(function(h){
-        return '<tr><td>'+esc(h.type)+'</td><td>'+esc(CAStore.maskCode(h.reservationCode))+'</td><td>'+statusPill(h.status||'접수')+'</td><td>'+esc(h.body||'-')+'</td><td>'+esc(h.answer||'-')+'</td><td>'+esc(h.at)+'</td></tr>';
-      }).join('');
+      tH.innerHTML = results.map(function(r){var s=state.slots.find(function(x){return x.id===r.slotId;});return '<tr><td>'+esc(CAStore.maskCode(r.reservationCode))+'</td><td>'+(s?CAStore.fmtDateShort(s.date)+' '+esc(s.time):esc(r.slotId))+'</td><td>'+statusPill(r.status)+'</td><td><button class="resetbtn" onclick="releaseReservation(\''+r.reservationCode+'\')">예약 해제</button></td></tr>';}).join('');
     }
 
     // 로그
@@ -356,15 +320,9 @@
     applyResponsiveLabels();
   }
 
-  function runAssignment(){
-    var state = CAStore.load();
-    var result = CAStore.runAssignment(state);
-    CAStore.save(state);
-    var box = document.getElementById('runResult');
-    box.style.display = 'flex';
-    box.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 배정 실행 완료 — 배정완료 '+result.successCount+'건 · 수동조율필요 '+result.manualCount+'건';
-    render();
-  }
+  function syncSlotStatus(slot){slot.status=slot.cap<=0||slot.booked>=slot.cap?'마감':((slot.cap-slot.booked)/slot.cap<=0.34?'마감임박':'모집중');}
+  function adjustCapacity(id,delta){var state=CAStore.load(),slot=state.slots.find(function(s){return s.id===id;});if(!slot)return;var next=Math.max(slot.booked,slot.cap+delta);if(next===slot.cap)return;slot.cap=next;syncSlotStatus(slot);CAStore.addLog(state,'[예외 조정] '+id+' 정원을 '+next+'명으로 변경했습니다.');CAStore.save(state);render();}
+  function releaseReservation(code){if(!confirm('일정 변경·취소 등 예외 처리로 이 예약을 해제할까요?'))return;var state=CAStore.load(),row=state.applicants.find(function(r){return r.reservationCode===code;});if(!row||!row.slotId)return;var slot=state.slots.find(function(s){return s.id===row.slotId;});if(slot){slot.booked=Math.max(0,slot.booked-1);syncSlotStatus(slot);}row.slotId='';row.status='예약전';row.at=CAStore.nowLabel();CAStore.addLog(state,'[예외 조정] '+CAStore.maskCode(code)+' 예약을 해제했습니다.');CAStore.save(state);render();}
 
   function resetDemo(){
     if(!confirm('데모 데이터를 초기 상태로 되돌릴까요? 브라우저에 저장된 이 데모의 모든 입력이 사라집니다.')) return;
@@ -373,20 +331,10 @@
     render();
   }
 
-  function importSurveySample(){
-    var state=CAStore.load();
-    var samples=[
-      {interviewerCode:'INT-2027-01',defaultCapacity:3,maxDay:3,times:['2026-10-03 09:00','2026-10-03 13:00'],source:'기존 설문 반입'},
-      {interviewerCode:'INT-2027-02',defaultCapacity:2,maxDay:2,times:['2026-10-04 09:00','2026-10-04 13:00'],source:'기존 설문 반입'}
-    ];
-    samples.forEach(function(row){row.capacities={};row.times.forEach(function(t){row.capacities[t]=row.defaultCapacity});row.at=CAStore.nowLabel();var old=state.availability.find(function(a){return a.interviewerCode===row.interviewerCode});if(old)Object.assign(old,row);else state.availability.push(row)});
-    CAStore.addLog(state,'기존 인터뷰어 가용시간 설문 자료를 반입했습니다(목업 샘플 2명).');CAStore.save(state);render();alert('목업에서는 샘플 2명을 반영했습니다. 실제 운영에서는 기존 1차 인터뷰어 설문 파일의 열 매핑과 검증 규칙을 확정한 뒤 일괄 반입합니다.');
-  }
-
   function downloadResults(){
-    var state=CAStore.load(), lines=['접수ID,예약코드,배정슬롯ID,배정날짜,배정시간,인터뷰어코드,상태'];
-    state.applicants.forEach(function(r){var s=state.slots.find(function(x){return x.id===r.slotId})||{};lines.push([r.id,r.reservationCode,r.slotId||'',s.date||'',s.time||'',s.interviewer||'',r.status||''].join(','))});
-    var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='interview-assignment-demo.csv';a.click();URL.revokeObjectURL(a.href);
+    var state=CAStore.load(), lines=['예약코드,슬롯ID,예약날짜,예약시간,팀코드,상태'];
+    state.applicants.filter(function(r){return r.slotId;}).forEach(function(r){var s=state.slots.find(function(x){return x.id===r.slotId})||{};lines.push([r.reservationCode,r.slotId||'',s.date||'',s.time||'',(s.interviewerCodes||[]).join('|'),r.status||''].join(','))});
+    var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='interview-reservations-demo.csv';a.click();URL.revokeObjectURL(a.href);
   }
 
   render();

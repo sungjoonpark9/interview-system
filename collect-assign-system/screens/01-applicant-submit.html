@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>인터뷰 가능한 시간 제출하기 (수집·배정형 샘플)</title>
+<title>인터뷰 예약 (샘플)</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
 <link rel="stylesheet" href="../../assets/augen.css">
@@ -44,10 +44,18 @@
   .cal-head .mo{font-size:14.5px; font-weight:500;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px;}
   .cal-dow{text-align:center; font-size:10.5px; font-weight:350; color:var(--gray-light); padding:3px 0;}
-  .cal-cell{aspect-ratio:1; border-radius:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12.5px; font-weight:350; color:var(--ink); border:1.5px solid transparent; transition:0.12s;}
+  .cal-cell{position:relative; aspect-ratio:1; border-radius:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12.5px; font-weight:350; color:var(--ink); border:1.5px solid transparent; transition:0.12s;}
   .cal-cell.blank{cursor:default;}
   .cal-cell:not(.blank):hover{background:var(--blue-wash);}
-  .cal-cell.chosen{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .cal-cell.available{background:rgba(0,113,227,.07); border-color:rgba(0,113,227,.22);}
+  .cal-cell .state-dot{position:absolute; left:50%; bottom:7px; width:4px; height:4px; margin-left:-2px; border-radius:50%; background:var(--blue);}
+  .cal-cell.sold-out{background:#f2f2f4; border-color:#dedee2; color:var(--gray-light);}
+  .cal-cell .cal-status{position:absolute; left:50%; bottom:3px; transform:translateX(-50%); font-size:7.5px; line-height:1; white-space:nowrap; color:var(--gray-light);}
+  .cal-cell.chosen{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 0 0 2px rgba(0,113,227,.18); font-weight:500;}
+  .cal-cell.chosen .state-dot{background:#fff; width:5px; height:5px; margin-left:-2.5px;}
+  .cal-cell.chosen .cal-status{color:#fff;}
+  .cal-cell.no-slots{color:#b7b7bc;}
+  @media (max-width:520px){.cal-cell .state-dot{bottom:5px}.cal-cell .cal-status{bottom:2px;font-size:7px}}
 
   .date-block{border:1.5px solid var(--border); border-radius:14px; padding:13px 14px; margin-bottom:10px;}
   .date-block .dh{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
@@ -122,8 +130,8 @@
 <div class="topbar">
   <div class="brand">
     <div>
-      <h1>인터뷰 가능한 시간 제출하기</h1>
-      <div class="sub">이 화면에서는 예약이 아니라 "가능한 시간"만 알려주시면 됩니다. 실제 인터뷰 시간은 담당자가 배정해서 별도로 안내드립니다</div>
+      <h1>인터뷰 예약</h1>
+      <div class="sub">예약코드로 로그인한 뒤 현재 예약 가능한 시간 하나를 선택합니다</div>
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
@@ -134,9 +142,9 @@
 
 <div class="wrap">
   <div class="card" id="formCard">
-    <div class="intro">
+    <div class="intro" id="bookingIntro" style="display:none">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div>예약 시스템이 아니라 "가능 시간 수집 후 배정" 방식으로 운영됩니다.<br>가능한 시간을 많이 골라 주실수록 배정받을 확률이 높아집니다. 담당자가 확정한 뒤 개별로 안내드립니다.</div>
+      <div>현재 예약 가능한 인터뷰 시간만 표시됩니다.<br>원하는 시간 하나를 선택해 주세요.</div>
     </div>
 
     <div class="field" id="reservationCodeField">
@@ -148,21 +156,24 @@
         </div>
         <button class="code-check" type="button" onclick="if(!beginCodeCheck(this)) return false; var _btn=this; verifyCode(); setTimeout(function(){endCodeCheck(_btn)},700);">코드 확인</button>
       </div>
-      <div class="sec-note">예약코드는 안내받은 코드만 입력해 주십시오. 이름·회중·연락처는 이 화면에 입력하거나 저장하지 않습니다.</div>
-      <div class="sec-note" style="margin-top:8px;">샘플 자원봉사자 코드 · 배정 전/후 동작을 비교할 수 있습니다</div>
+      <div class="sec-note">발급받은 예약코드를 입력해 주세요.</div>
+      <div class="sec-note" style="margin-top:8px;">샘플 예약코드</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-A7K9-P2Q4')">VM27-A7K9-P2Q4 · 배정됨</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-B3M8-R6T1')">VM27-B3M8-R6T1 · 배정됨</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-C5N2-X8W7')">VM27-C5N2-X8W7 · 배정됨</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-D4P6-Y2K8')">VM27-D4P6-Y2K8 · 배정 전</button>
-        <button type="button" class="sample-code" onclick="useSampleCode('VM27-E7R3-H5N1')">VM27-E7R3-H5N1 · 배정 전</button>
+        <button type="button" class="sample-code" data-code="VM27-A7K9-P2Q4" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-B3M8-R6T1" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-C5N2-X8W7" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-D4P6-Y2K8" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-E7R3-H5N1" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-F8T4-J6M2" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-G9V5-L7P3" onclick="useSampleCode(this.dataset.code)"></button>
+        <button type="button" class="sample-code" data-code="VM27-H2W6-N8R4" onclick="useSampleCode(this.dataset.code)"></button>
       </div>
       <div class="code-status" id="codeStatus"></div>
     </div>
 
     <div class="availability-section" id="availabilitySection">
-    <div class="sec-title">가능한 날짜 고르기</div>
-    <div class="sec-note">최대 7일까지 고른 뒤, 날짜별로 오전·오후를 선택해 주십시오. 같은 날 오전과 오후를 모두 선택할 수 있습니다.</div>
+    <div class="sec-title">예약 가능한 인터뷰 시간</div>
+    <div class="sec-note">날짜를 선택한 뒤 정원이 남아 있는 시작시간 하나를 골라 주십시오.</div>
 
     <div class="cal-head">
       <div class="mo" id="calMonthLabel">2026년 10월</div>
@@ -170,14 +181,14 @@
     <div class="cal-grid" id="calDow"></div>
     <div class="cal-grid" id="calGrid"></div>
 
-    <div class="sec-title" style="margin-top:22px;">날짜별 오전·오후 선택</div>
+    <div class="sec-title" style="margin-top:22px;">시작시간 선택</div>
     <div id="dateBlocks"><div class="empty-note">먼저 위 달력에서 날짜를 골라 주세요.</div></div>
 
-    <div class="summary-title">제출하실 가능 시간</div>
+    <div class="summary-title">선택한 인터뷰 시간</div>
     <div class="summary-chips" id="summaryChips"><span class="sum-empty">아직 고른 시간이 없습니다.</span></div>
 
-    <button class="btn-submit" id="submitBtn" disabled onclick="submitApplicant()">이 시간들로 제출하기</button>
-    <div class="privacy">제출하신 내용은 인터뷰 배정에만 사용됩니다.<br>이 화면에서는 즉시 확정되지 않습니다.</div>
+    <button class="btn-submit" id="submitBtn" disabled onclick="submitApplicant()">이 시간으로 예약 확정</button>
+    <div class="privacy">예약코드와 확정된 슬롯만 저장합니다.<br>이름·회중·전화번호·이메일은 입력하거나 저장하지 않습니다.</div>
     </div>
   </div>
 
@@ -185,11 +196,11 @@
     <div class="check">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <h3 id="successTitle">잘 제출되었습니다</h3>
-    <p id="successBody">담당자가 가능한 시간을 바탕으로 인터뷰 일정을 배정한 뒤, 확정되면 개별로 안내드립니다.</p>
+    <h3 id="successTitle">인터뷰 예약이 확정되었습니다</h3>
+    <p id="successBody"></p>
   </div>
 
-  <div class="footer-tag">이 화면은 브라우저에 저장되는 연동 데모입니다 · <a href="03-admin-workbook.html" style="color:var(--blue);">관리자 워크북에서 확인하기 →</a></div>
+  <div class="footer-tag">이 화면은 브라우저에 저장되는 연동 데모입니다.</div>
 </div>
 
 <script src="../assets/store.js"></script>
@@ -197,120 +208,14 @@
 <script>
   const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
-  const availability = {}; // date -> Set(times)
   let verifiedCode = '';
+  let selectedSlotId = '';
   const dowNames = ['일','월','화','수','목','금','토'];
   function pad(n){ return n<10 ? '0'+n : ''+n; }
-
-  function renderCalendar(){
-    document.getElementById('calMonthLabel').textContent = viewYear + '년 ' + (viewMonth+1) + '월';
-    document.getElementById('calDow').innerHTML = dowNames.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
-    const first = new Date(viewYear, viewMonth, 1);
-    const startDow = first.getDay();
-    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
-    let html = '';
-    for(let i=0;i<startDow;i++) html += '<div class="cal-cell blank"></div>';
-    for(let d=1; d<=daysInMonth; d++){
-      const dstr = viewYear+'-'+pad(viewMonth+1)+'-'+pad(d);
-      const cls = chosenDates.has(dstr) ? ' chosen' : '';
-      html += '<div class="cal-cell'+cls+'" onclick="toggleDate(\''+dstr+'\')">'+d+'</div>';
-    }
-    document.getElementById('calGrid').innerHTML = html;
-  }
-
-  function toggleDate(dstr){
-    if(chosenDates.has(dstr)){
-      chosenDates.delete(dstr);
-      delete availability[dstr];
-    } else {
-      if(chosenDates.size >= 7){ alert('선택 가능한 날짜는 최대 7일입니다.'); return; }
-      chosenDates.add(dstr);
-      availability[dstr] = new Set();
-    }
-    renderCalendar();
-    renderDateBlocks();
-    renderSummary();
-  }
 
   function fmtDate(dstr){
     const d = new Date(dstr+'T00:00:00');
     return (d.getMonth()+1)+'월 '+d.getDate()+'일('+dowNames[d.getDay()]+')';
-  }
-
-  function renderDateBlocks(){
-    const el = document.getElementById('dateBlocks');
-    const dates = Array.from(chosenDates).sort();
-    if(dates.length===0){
-      el.innerHTML = '<div class="empty-note">먼저 위 달력에서 날짜를 골라 주세요.</div>';
-      return;
-    }
-    el.innerHTML = dates.map(dstr=>{
-      const periods = CAStore.applicantPeriodsForDate(dstr);
-      const buttons = periods.map(function(p){
-        const on = availability[dstr] && availability[dstr].has(p.id);
-        const ranges = p.blocks.map(function(b){ return b.range; }).join(' · ');
-        return '<button type="button" class="period-btn'+(on?' on':'')+'" onclick="togglePeriod(\''+dstr+'\',\''+p.id+'\')"><b>'+p.label+'</b><br><span style="font-size:10.5px;opacity:.8">'+ranges+'</span></button>';
-      }).join('');
-      return '<div class="date-block">'+
-        '<div class="dh"><div class="dlabel">'+fmtDate(dstr)+'</div><div class="remove" onclick="toggleDate(\''+dstr+'\')">이 날 빼기</div></div>'+
-        '<div class="period-row">'+buttons+'</div></div>';
-    }).join('');
-  }
-
-  function togglePeriod(dstr, period){
-    if(availability[dstr].has(period)) availability[dstr].delete(period);
-    else availability[dstr].add(period);
-    renderDateBlocks();
-    renderSummary();
-  }
-
-  function renderSummary(){
-    const el = document.getElementById('summaryChips');
-    let entries = [];
-    Object.keys(availability).sort().forEach(dstr=>{
-      Array.from(availability[dstr]).sort().forEach(p=>{ entries.push({d:dstr, p:p}); });
-    });
-    if(entries.length===0){
-      el.innerHTML = '<span class="sum-empty">아직 고른 시간이 없습니다.</span>';
-      document.getElementById('submitBtn').disabled = true;
-      return;
-    }
-    el.innerHTML = entries.map(e=>{
-      const short = fmtDate(e.d).replace(/\([^)]+\)/,'');
-      const label = e.p === 'AM' ? '오전' : '오후';
-      return '<span class="sum-chip">'+short+' '+label+'<span class="x" onclick="togglePeriod(\''+e.d+'\',\''+e.p+'\')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>';
-    }).join('');
-    document.getElementById('submitBtn').disabled = false;
-  }
-
-  function submitApplicant(){
-    const reservationCode = verifiedCode;
-    if(!reservationCode){
-      alert('예약코드를 먼저 확인해 주십시오.');
-      return;
-    }
-
-    const times = [], periods = [];
-    Object.keys(availability).sort().forEach(dstr=>{
-      Array.from(availability[dstr]).sort().forEach(function(pid){
-        periods.push(dstr+' '+pid);
-        const p = CAStore.applicantPeriodsForDate(dstr).find(function(x){ return x.id===pid; });
-        if(p) p.blocks.forEach(function(b){ times.push(dstr+' '+b.start); });
-      });
-    });
-
-    const state = CAStore.load();
-    const existing = state.applicants.find(function(r){ return r.reservationCode === reservationCode; });
-    if(existing && existing.slotId){ alert('이미 배정이 확정되어 이 화면에서 수정할 수 없습니다. 문의하기에서 변경을 요청해 주십시오.'); return; }
-    if(existing){ existing.times=times; existing.periods=periods; existing.status='배정대기'; existing.at=CAStore.nowLabel(); }
-    else state.applicants.push({ id: 'A-'+Date.now(), reservationCode, kind: '개별', periods, times, slotId: '', status: '배정대기', at: CAStore.nowLabel() });
-    CAStore.addLog(state, CAStore.maskCode(reservationCode)+' 코드로 가능시간 '+times.length+'건이 제출되었습니다.');
-    CAStore.save(state);
-
-    document.getElementById('successBody').textContent =
-      '가능한 오전·오후 '+periods.length+'건이 '+(existing?'수정':'접수')+'되었습니다. 담당자가 다음 배정 실행 때 반영합니다.';
-    document.getElementById('formCard').style.display = 'none';
-    document.getElementById('successPanel').style.display = 'block';
   }
 
   function useSampleCode(code){
@@ -319,38 +224,96 @@
     verifyCode();
   }
 
-  function verifyCode(){
-    const code=(document.getElementById('reservationCode').value||'').trim().toUpperCase();
-    if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){ alert('예약코드를 다시 확인해 주십시오. 예: VM27-A7K9-P2Q4'); return; }
-    const row=CAStore.load().applicants.find(function(r){ return r.reservationCode===code; });
-    verifiedCode = code;
-    var volunteerSession = CAAuth.loginVolunteer(code);
-    try { if(window.parent && window.parent !== window && typeof window.parent.CA_afterVolunteerLogin === 'function') window.parent.CA_afterVolunteerLogin(volunteerSession); } catch(e) {}
-    if(row && row.slotId){
-      try{
-        if(window.parent && window.parent !== window && typeof window.parent.setTab === 'function'){
-          window.parent.setTab('volunteerAssignment');
-          return;
-        }
-      }catch(e){}
-      location.href='11-volunteer-assignment.html';
-      return;
+  /* 예약코드 로그인 후 열린 슬롯 하나를 직접 확정합니다. */
+  function availableSlots(){
+    return (CAStore.load().slots||[]).filter(function(s){return s.status!=="마감" && s.booked<s.cap;});
+  }
+  function renderCalendar(){
+    document.getElementById('calMonthLabel').textContent=viewYear+'년 '+(viewMonth+1)+'월';
+    document.getElementById('calDow').innerHTML=dowNames.map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');
+    var dates={};
+    (CAStore.load().slots||[]).forEach(function(s){
+      if(!dates[s.date]) dates[s.date]={hasSlots:false,hasOpen:false};
+      dates[s.date].hasSlots=true;
+      if(s.status!=='마감' && s.booked<s.cap) dates[s.date].hasOpen=true;
+    });
+    var first=new Date(viewYear,viewMonth,1), startDow=first.getDay(), days=new Date(viewYear,viewMonth+1,0).getDate(), html='';
+    for(var i=0;i<startDow;i++) html+='<div class="cal-cell blank"></div>';
+    for(var d=1;d<=days;d++){
+      var dstr=viewYear+'-'+pad(viewMonth+1)+'-'+pad(d), info=dates[dstr], hasSlots=!!(info&&info.hasSlots), open=!!(info&&info.hasOpen), chosen=chosenDates.has(dstr);
+      var stateClass=open?' available':(hasSlots?' sold-out':' blank no-slots');
+      var marker=open?'<span class="state-dot" aria-hidden="true"></span>':(hasSlots?'<span class="cal-status" aria-hidden="true">마감</span>':'');
+      var label=d+'일'+(open?' 예약 가능':(hasSlots?' 전체 마감':' 예약 가능한 시간 없음'))+(chosen?' 선택됨':'');
+      html+='<div class="cal-cell'+stateClass+(chosen?' chosen':'')+'" aria-label="'+label+'"'+(hasSlots?' onclick="toggleDate(\''+dstr+'\')"':'')+'><span>'+d+'</span>'+marker+'</div>';
     }
-    document.getElementById('reservationCode').value = code;
-    document.getElementById('reservationCode').readOnly = true;
-    document.getElementById('reservationCodeField').style.display = 'none';
-    document.getElementById('availabilitySection').classList.add('show');
-    const status = document.getElementById('codeStatus');
-    status.style.display = 'block';
-    status.textContent = row ? '코드가 확인되었습니다. 기존 제출 내용을 불러왔습니다.' : '코드가 확인되었습니다. 가능한 날짜를 골라 주십시오.';
-    chosenDates.clear(); Object.keys(availability).forEach(function(k){ delete availability[k]; });
-    if(row) (row.periods||[]).forEach(function(v){ const parts=v.split(' '); chosenDates.add(parts[0]); if(!availability[parts[0]]) availability[parts[0]]=new Set(); availability[parts[0]].add(parts[1]); });
+    document.getElementById('calGrid').innerHTML=html;
+  }
+  function toggleDate(dstr){
+    chosenDates.clear(); chosenDates.add(dstr); selectedSlotId='';
     renderCalendar(); renderDateBlocks(); renderSummary();
-    setTimeout(function(){ document.getElementById('availabilitySection').scrollIntoView({behavior:'smooth',block:'start'}); }, 50);
+  }
+  function renderDateBlocks(){
+    var el=document.getElementById('dateBlocks'), date=Array.from(chosenDates)[0];
+    if(!date){el.innerHTML='<div class="empty-note">먼저 위 달력에서 날짜를 골라 주세요.</div>';return;}
+    var slots=(CAStore.load().slots||[]).filter(function(s){return s.date===date;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    el.innerHTML='<div class="date-block"><div class="dh"><div class="dlabel">'+fmtDate(date)+'</div><div class="remove" onclick="clearSlotDate()">이 날 빼기</div></div><div class="period-row">'+slots.map(function(s){
+      var full=s.status==='마감'||s.booked>=s.cap, remain=Math.max(0,s.cap-s.booked);
+      return '<button type="button" class="period-btn'+(selectedSlotId===s.id?' on':'')+'" '+(full?'disabled':'onclick="selectSlot(\''+s.id+'\')"')+'><b>'+s.time+'</b><br><span style="font-size:10.5px;opacity:.8">'+(full?'마감':'예약 가능 · '+remain+'자리')+'</span></button>';
+    }).join('')+'</div></div>';
+  }
+  function clearSlotDate(){chosenDates.clear();selectedSlotId='';renderCalendar();renderDateBlocks();renderSummary();}
+  function selectSlot(id){selectedSlotId=id;renderDateBlocks();renderSummary();}
+  function renderSummary(){
+    var slot=(CAStore.load().slots||[]).find(function(s){return s.id===selectedSlotId;}), el=document.getElementById('summaryChips');
+    if(!slot){el.innerHTML='<span class="sum-empty">아직 고른 시간이 없습니다.</span>';document.getElementById('submitBtn').disabled=true;return;}
+    el.innerHTML='<span class="sum-chip">'+fmtDate(slot.date)+' '+slot.time+'<span class="x" onclick="selectedSlotId=\'\';renderDateBlocks();renderSummary()">×</span></span>';
+    document.getElementById('submitBtn').disabled=false;
+  }
+  function submitApplicant(){
+    if(!verifiedCode||!selectedSlotId){alert('예약코드와 인터뷰 시간을 확인해 주십시오.');return;}
+    var state=CAStore.load(), selected=(state.slots||[]).find(function(s){return s.id===selectedSlotId;});
+    if(!selected){alert('선택한 시간을 다시 확인해 주십시오.');return;}
+    if(!confirm(CAStore.fmtDateShort(selected.date)+' '+selected.time+'로 예약할까요?')) return;
+    var result=CAStore.reserveSlot(state,verifiedCode,selectedSlotId);
+    if(!result.ok){
+      if(result.reason==='already'){showExistingReservation();return;}
+      alert('방금 이 시간이 마감되었습니다. 다른 시간을 선택해 주십시오.'); selectedSlotId='';renderCalendar();renderDateBlocks();renderSummary();return;
+    }
+    document.getElementById('successBody').innerHTML='<b>'+CAStore.fmtDateShort(result.slot.date)+' '+result.slot.time+'</b><br><br>예약시간 15분 전까지 Zoom 대기실에 입장해 주세요. 인터뷰 진행 상황에 따라 예정 시간보다 조금 일찍 시작하거나 늦게 시작할 수 있습니다.';
+    document.getElementById('formCard').style.display='none'; document.getElementById('successPanel').style.display='block';
+    try{if(window.parent&&window.parent!==window){if(typeof window.parent.updateTabVisibility==='function')window.parent.updateTabVisibility();if(typeof window.parent.updateSessionBar==='function')window.parent.updateSessionBar();}}catch(e){}
+    try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'ca-reservation-changed'},location.origin);}catch(e){}
+  }
+  function showExistingReservation(){
+    try{if(window.parent&&window.parent!==window&&typeof window.parent.setTab==='function'){window.parent.setTab('volunteerAssignment');return;}}catch(e){}
+    location.href='11-volunteer-assignment.html';
+  }
+  function verifyCode(){
+    var code=(document.getElementById('reservationCode').value||'').trim().toUpperCase();
+    if(!/^VM27-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){alert('예약코드를 다시 확인해 주십시오. 예: VM27-A7K9-P2Q4');return;}
+    var row=(CAStore.load().applicants||[]).find(function(r){return r.reservationCode===code;});
+    verifiedCode=code; var volunteerSession=CAAuth.loginVolunteer(code);
+    try{if(window.parent&&window.parent!==window&&typeof window.parent.CA_afterVolunteerLogin==='function')window.parent.CA_afterVolunteerLogin(volunteerSession);}catch(e){}
+    try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:'ca-session-changed'},location.origin);}catch(e){}
+    if(row&&row.slotId){showExistingReservation();return;}
+    document.getElementById('reservationCode').readOnly=true; document.getElementById('reservationCodeField').style.display='none'; document.getElementById('bookingIntro').style.display='flex'; document.getElementById('availabilitySection').classList.add('show');
+    chosenDates.clear();selectedSlotId='';
+    var first=availableSlots().slice().sort(function(a,b){return(a.date+a.time).localeCompare(b.date+b.time);})[0];
+    if(first) chosenDates.add(first.date);
+    renderCalendar();renderDateBlocks();renderSummary();
+    setTimeout(function(){document.getElementById('availabilitySection').scrollIntoView({behavior:'smooth',block:'start'});},50);
+  }
+  function renderSampleCodeStates(){
+    var rows=(CAStore.load().applicants||[]);
+    document.querySelectorAll('.sample-code[data-code]').forEach(function(btn){
+      var code=btn.dataset.code, row=rows.find(function(r){return r.reservationCode===code;}), reserved=!!(row&&row.slotId);
+      btn.textContent=code+' · '+(reserved?'예약 완료':(row&&row.demoGroup==='close-test'?'마감 테스트':'예약하기'));
+    });
   }
 
   document.getElementById('reservationCode').addEventListener('keydown', function(e){ if(e.key==='Enter') verifyCode(); });
 
+  renderSampleCodeStates();
   renderCalendar();
   (function useLoggedInCode(){
     try{

@@ -15,6 +15,8 @@ window.CAAuth = (function () {
   var WHITELIST = [
     { code: "INT-2027-01", label: "인터뷰어 01", role: "interviewer" },
     { code: "INT-2027-02", label: "인터뷰어 02", role: "interviewer" },
+    { code: "INT-2027-03", label: "인터뷰어 03", role: "interviewer" },
+    { code: "INT-2027-04", label: "인터뷰어 04", role: "interviewer" },
     { code: "CALL-2027-01", label: "콜센터 자원봉사자 01", role: "helpdesk" },
     { code: "VM-ADMIN-27", label: "VM 운영 관리자", role: "admin" },
     { code: "SYS-ADMIN-27", label: "시스템 관리자", role: "system" }

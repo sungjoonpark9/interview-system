@@ -7,30 +7,38 @@
    ============================================================ */
 window.DemoStore = (function () {
   var KEY = "vm2027_interview_demo_v2";
+  var SCHEMA_VERSION = 3;
   var DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
   function seed() {
     return {
+      schemaVersion: SCHEMA_VERSION,
+      volunteerCodes: ["VM27-A7K9-P2Q4", "VM27-N4D8-K6R2", "VM27-H3M5-T9W7"],
+      interviewTimes: [
+        { id:"TIME-20260902-1900", date:"2026-09-02", start:"19:00", end:"21:30", teams:3 },
+        { id:"TIME-20260903-1900", date:"2026-09-03", start:"19:00", end:"21:30", teams:2 }
+      ],
       slots: [
-        { id: "SLOT-0803-01", date: "2026-08-03", time: "10:00", status: "모집중", plannedCap: 3, cap: 3, booked: 3, interviewer: "김민수" },
-        { id: "SLOT-0803-02", date: "2026-08-03", time: "10:30", status: "모집중", plannedCap: 3, cap: 3, booked: 2, interviewer: "이수진" },
-        { id: "SLOT-0803-03", date: "2026-08-03", time: "11:00", status: "모집중", plannedCap: 3, cap: 3, booked: 1, interviewer: "이수진" },
-        { id: "SLOT-0804-02", date: "2026-08-04", time: "10:30", status: "모집중", plannedCap: 3, cap: 3, booked: 3, interviewer: "박지훈" }
+        { id:"20260902_1900", date:"2026-09-02", time:"19:00", status:"마감임박", plannedCap:3, cap:3, booked:2, interviewTimeId:"TIME-20260902-1900", interviewer:"김민수" },
+        { id:"20260902_1940", date:"2026-09-02", time:"19:40", status:"모집중", plannedCap:3, cap:3, booked:1, interviewTimeId:"TIME-20260902-1900", interviewer:"김민수" },
+        { id:"20260902_2020", date:"2026-09-02", time:"20:20", status:"모집중", plannedCap:3, cap:3, booked:0, interviewTimeId:"TIME-20260902-1900", interviewer:"김민수" },
+        { id:"20260902_2100", date:"2026-09-02", time:"21:00", status:"마감", plannedCap:3, cap:3, booked:3, interviewTimeId:"TIME-20260902-1900", interviewer:"김민수" },
+        { id:"20260903_1900", date:"2026-09-03", time:"19:00", status:"모집중", plannedCap:2, cap:2, booked:0, interviewTimeId:"TIME-20260903-1900", interviewer:"이수진" },
+        { id:"20260903_1940", date:"2026-09-03", time:"19:40", status:"모집중", plannedCap:2, cap:2, booked:0, interviewTimeId:"TIME-20260903-1900", interviewer:"이수진" },
+        { id:"20260903_2020", date:"2026-09-03", time:"20:20", status:"모집중", plannedCap:2, cap:2, booked:0, interviewTimeId:"TIME-20260903-1900", interviewer:"이수진" },
+        { id:"20260903_2100", date:"2026-09-03", time:"21:00", status:"모집중", plannedCap:2, cap:2, booked:0, interviewTimeId:"TIME-20260903-1900", interviewer:"이수진" }
       ],
       reservations: [
-        { id: "R-1001", name: "김OO", email: "applicant01@email.com", kind: "개인", slotId: "SLOT-0803-02", slotLabel: "SLOT-0803-02 · 10:30", status: "확정", zoomSent: true, at: "07.24 21:12" },
-        { id: "R-1002", name: "이OO · 박OO", email: "couple02@email.com", kind: "부부", slotId: "SLOT-0803-01", slotLabel: "SLOT-0803-01 · 10:00", status: "확정", zoomSent: true, at: "07.24 20:55" },
-        { id: "R-1004", name: "정OO", email: "applicant04@email.com", kind: "개인", slotId: "SLOT-0803-03", slotLabel: "SLOT-0803-03 · 11:00", status: "취소", zoomSent: false, at: "07.23 14:20" }
+        { id:"R-1001", volunteerCode:"VM27-DEMO-0001", slotId:"20260902_1900", slotLabel:"09.02(수) 19:00", status:"확정", zoomSent:true, at:"08.24 09:10" },
+        { id:"R-1002", volunteerCode:"VM27-DEMO-0002", slotId:"20260902_1900", slotLabel:"09.02(수) 19:00", status:"확정", zoomSent:true, at:"08.24 09:14" },
+        { id:"R-1003", volunteerCode:"VM27-DEMO-0003", slotId:"20260902_1940", slotLabel:"09.02(수) 19:40", status:"확정", zoomSent:true, at:"08.24 09:18" }
       ],
       // 인터뷰어에게는 실제 이름 대신 예약코드 기준으로 배정 대상을 표시합니다.
       // 실제 인물 ↔ 예약코드 연결은 로컬 관리도구에서만 관리하는 구조를 가정합니다.
       assignments: [
-        { id: "A-1001", applicantCode: "VM27-A7K9-P2Q4", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
-        { id: "A-1002", applicantCode: "VM27-N4D8-K6R2", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
-        { id: "A-1003", applicantCode: "VM27-H3M5-T9W7", slotId: "SLOT-0803-01", interviewer: "김민수", status: "대기" },
-        { id: "A-1004", applicantCode: "VM27-C8F2-L4S6", slotId: "SLOT-0803-02", interviewer: "이수진", status: "대기" },
-        { id: "A-1005", applicantCode: "VM27-R6B3-J8P1", slotId: "SLOT-0803-02", interviewer: "이수진", status: "대기" },
-        { id: "A-1006", applicantCode: "VM27-Q2T7-M5K9", slotId: "SLOT-0803-03", interviewer: "이수진", status: "대기" }
+        { id:"A-1001", applicantCode:"VM27-DEMO-0001", slotId:"20260902_1900", interviewer:"김민수", status:"대기" },
+        { id:"A-1002", applicantCode:"VM27-DEMO-0002", slotId:"20260902_1900", interviewer:"김민수", status:"대기" },
+        { id:"A-1003", applicantCode:"VM27-DEMO-0003", slotId:"20260902_1940", interviewer:"김민수", status:"대기" }
       ],
       // 인터뷰어가 등록한 "날짜별 최대 가능 횟수" — 관리자가 이 한도 안에서 실제 시간대(슬롯)를 만듭니다.
       capacity: [
@@ -41,7 +49,7 @@ window.DemoStore = (function () {
       faq: [
         { id: "F-1", q: "예약 가능한 기간은 언제까지인가요?", a: "오늘로부터 최대 2개월 이내의 날짜만 예약하실 수 있습니다. 그 이후 기간은 아직 준비 중입니다.", at: "" },
         { id: "F-2", q: "제출한 예약을 수정하고 싶습니다.", a: "이 화면에서는 직접 수정할 수 없습니다. 문의하기 화면으로 변경 내용을 남겨 주시면 담당자가 반영해 드립니다.", at: "" },
-        { id: "F-3", q: "인터뷰 확정 안내는 어떻게 받나요?", a: "예약이 확정되면 입력하신 이메일 주소로 확정 안내와 접속 링크를 보내드립니다.", at: "" }
+        { id: "F-3", q: "인터뷰 예약은 어떻게 확인하나요?", a: "예약코드로 다시 로그인하면 확정된 날짜와 시간을 확인할 수 있습니다.", at: "" }
       ],
       log: []
     };
@@ -52,6 +60,7 @@ window.DemoStore = (function () {
       var raw = localStorage.getItem(KEY);
       if (raw) {
         var parsed = JSON.parse(raw);
+        if (parsed.schemaVersion !== SCHEMA_VERSION) throw new Error("schema migration");
         if (!parsed.capacity) parsed.capacity = [];
         if (!parsed.assignments) parsed.assignments = seed().assignments;
         if (!parsed.faq) parsed.faq = seed().faq;
@@ -108,6 +117,11 @@ window.DemoStore = (function () {
     return null;
   }
 
+  function findVolunteerCode(state, code) {
+    var normalized = (code || "").trim().toUpperCase();
+    return (state.volunteerCodes || []).indexOf(normalized) !== -1 ? normalized : null;
+  }
+
   // 가용성(용량) ID 규칙 — 날짜+인터뷰어이름
   function capacityIdFor(dstr, name) {
     var mmdd = dstr.slice(0, 4) + dstr.slice(5, 7) + dstr.slice(8, 10);
@@ -132,7 +146,7 @@ window.DemoStore = (function () {
     load: load, save: save, reset: reset, seed: seed,
     addLog: addLog, nowLabel: nowLabel,
     fmtDateLabel: fmtDateLabel, fmtDateShort: fmtDateShort,
-    slotIdFor: slotIdFor, findSlot: findSlot,
+    slotIdFor: slotIdFor, findSlot: findSlot, findVolunteerCode: findVolunteerCode,
     capacityIdFor: capacityIdFor, findCapacity: findCapacity,
     monthRange: monthRange, DOW: DOW
   };

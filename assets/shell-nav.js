@@ -5,8 +5,8 @@
   try { if (window.parent && window.parent !== window) return; } catch (e) { return; }
 
   var SCREENS = [
-    { id: '01-applicant-form', t: '예약하기 · 문의하기 (신청자)' },
-    { id: '06-faq', t: '자주 묻는 질문 (신청자)' },
+    { id: '01-applicant-form', t: '예약하기 · 문의하기 (자원봉사자)' },
+    { id: '06-faq', t: '자주 묻는 질문 (자원봉사자)' },
     { id: 'login', t: '로그인 (인터뷰어·관리자)' },
     { id: '03-interviewer-availability', t: '가능한 날짜 알려주기 (인터뷰어)' },
     { id: '04-interviewer-dashboard', t: '내 배정 확인 (인터뷰어)' },

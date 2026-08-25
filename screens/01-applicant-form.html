@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>인터뷰 예약하기 · 문의하기 (샘플)</title>
+<title>자원봉사자 인터뷰 예약 · 문의</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
 <link rel="stylesheet" href="../assets/augen.css">
@@ -116,8 +116,8 @@
 <div class="topbar">
   <div class="brand">
     <div>
-      <h1>인터뷰 예약하기 · 문의하기</h1>
-      <div class="sub">신청자가 직접 쓰는 예약·문의 화면입니다</div>
+      <h1>자원봉사자 인터뷰 예약 · 문의</h1>
+      <div class="sub">예약코드로 로그인해 인터뷰 시간을 예약합니다</div>
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
@@ -136,12 +136,18 @@
     <!-- ============ 예약 신청 (캘린더형) ============ -->
     <div class="tab-body" id="panel-reserve">
 
+      <div id="codeLogin">
+        <div class="field"><label>예약코드<span class="req">*</span></label><input type="text" id="reservationCode" placeholder="VM27-XXXX-XXXX" style="padding-left:13px;text-transform:uppercase"></div>
+        <button class="btn-submit" onclick="loginVolunteer()">예약코드로 로그인</button>
+        <div class="privacy">샘플 코드: VM27-A7K9-P2Q4 · VM27-N4D8-K6R2 · VM27-H3M5-T9W7</div>
+      </div>
+      <div id="bookingFlow" style="display:none">
       <div class="steps" id="stepBar">
         <div style="display:flex;flex-direction:column;align-items:center;"><div class="step-dot now" id="dot1">1</div><div class="step-label">날짜</div></div>
         <div class="step-line" id="line1"></div>
         <div style="display:flex;flex-direction:column;align-items:center;"><div class="step-dot" id="dot2">2</div><div class="step-label">시간</div></div>
         <div class="step-line" id="line2"></div>
-        <div style="display:flex;flex-direction:column;align-items:center;"><div class="step-dot" id="dot3">3</div><div class="step-label">정보</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;"><div class="step-dot" id="dot3">3</div><div class="step-label">확정</div></div>
       </div>
 
       <div class="cal-head">
@@ -171,41 +177,7 @@
         <div class="change" onclick="resetSelection()">변경</div>
       </div>
 
-      <div class="detail-form" id="detailForm">
-        <div class="field">
-          <label>신청 유형<span class="req">*</span></label>
-          <div class="radio-group">
-            <div class="radio-opt selected" onclick="selRadio(this, '개인')">혼자 받습니다</div>
-            <div class="radio-opt" onclick="selRadio(this, '부부')">부부가 함께 받습니다</div>
-          </div>
-        </div>
-        <div class="field">
-          <label>이름<span class="req">*</span></label>
-          <div class="input-icon">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-            <input type="text" id="rsvName" placeholder="홍길동">
-          </div>
-        </div>
-        <div class="field">
-          <label>이메일<span class="req">*</span></label>
-          <div class="input-icon">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-            <input type="email" id="rsvEmail" placeholder="example@email.com">
-          </div>
-        </div>
-        <div class="field">
-          <label>연락처<span class="req">*</span></label>
-          <div class="input-icon">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.4 2.1L8 9.9a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.8 2.2z"/></svg>
-            <input type="tel" id="rsvPhone" placeholder="010-0000-0000">
-          </div>
-        </div>
-        <div class="field">
-          <label>미리 알려주실 내용 (선택)</label>
-          <textarea placeholder="미리 알려주실 점이 있으면 적어 주세요."></textarea>
-        </div>
-        <button class="btn-submit" onclick="submitForm('reserve')">이 시간으로 신청하기</button>
-        <div class="privacy">적어주신 정보는 인터뷰 일정을 안내하는 데에만 씁니다.</div>
+      <div class="detail-form" id="detailForm"><div class="privacy" id="activeCode" style="margin-bottom:12px"></div><button class="btn-submit" onclick="submitForm('reserve')">이 시간으로 예약 확정</button></div>
       </div>
     </div>
 
@@ -232,26 +204,13 @@
           </div>
         </div>
       </div>
-      <div class="field">
-        <label>이름<span class="req">*</span></label>
-        <div class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-          <input type="text" placeholder="홍길동">
-        </div>
-      </div>
-      <div class="field">
-        <label>이메일<span class="req">*</span></label>
-        <div class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-          <input type="email" placeholder="example@email.com">
-        </div>
-      </div>
+      <div class="field"><label>예약코드<span class="req">*</span></label><input type="text" id="helpCode" placeholder="VM27-XXXX-XXXX" style="padding-left:13px;text-transform:uppercase"></div>
       <div class="field">
         <label>문의하실 내용<span class="req">*</span></label>
-        <textarea placeholder="어떤 점이 궁금하신지 편하게 적어 주세요." style="min-height:100px;"></textarea>
+        <textarea id="helpBody" placeholder="어떤 점이 궁금하신지 편하게 적어 주세요." style="min-height:100px;"></textarea>
       </div>
       <button class="btn-submit" onclick="submitForm('help')">문의 보내기</button>
-      <div class="privacy">평일 기준 하루 안에 이메일로 답변드립니다.</div>
+      <div class="privacy">문의는 예약코드를 기준으로 확인합니다.</div>
     </div>
 
     <!-- ============ 제출 완료 ============ -->
@@ -260,7 +219,7 @@
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <h3 id="successTitle">잘 접수되었습니다</h3>
-      <p id="successBody">확인한 뒤 이메일로 안내드리겠습니다.</p>
+      <p id="successBody">예약코드를 기준으로 처리 결과를 확인합니다.</p>
       <div class="ref" id="successRef">접수번호 확인 중...</div>
     </div>
   </div>
@@ -270,6 +229,26 @@
 
 <script src="../assets/demo-store.js"></script>
 <script>
+  let currentVolunteerCode = null;
+  function loginVolunteer(){
+    const state=DemoStore.load();
+    currentVolunteerCode=DemoStore.findVolunteerCode(state,document.getElementById('reservationCode').value);
+    if(!currentVolunteerCode){ alert('등록된 예약코드를 확인해 주세요.'); return; }
+    const existing=state.reservations.find(r=>r.volunteerCode===currentVolunteerCode && r.status==='확정');
+    if(existing){ showReservation(existing,state); return; }
+    document.getElementById('codeLogin').style.display='none';
+    document.getElementById('bookingFlow').style.display='block';
+    document.getElementById('activeCode').textContent='예약코드 '+currentVolunteerCode;
+    buildSlotData(); renderCalendar();
+  }
+  function showReservation(reservation,state){
+    const slot=DemoStore.findSlot(state,reservation.slotId);
+    document.getElementById('panel-reserve').style.display='none'; document.getElementById('panel-help').style.display='none';
+    document.querySelector('.tabs').style.display='none'; document.getElementById('successPanel').style.display='block';
+    document.getElementById('successTitle').textContent='예약 확인';
+    document.getElementById('successBody').innerHTML='<b>'+(slot?DemoStore.fmtDateLabel(slot.date)+' '+slot.time:reservation.slotLabel)+'</b><br><br>예약시간 15분 전까지 Zoom 대기실에 입장해 주세요.<br>인터뷰 진행 상황에 따라 예정 시간보다 조금 일찍 시작하거나 늦게 시작할 수 있습니다.';
+    document.getElementById('successRef').textContent='예약코드 '+reservation.volunteerCode;
+  }
   // ---------- 데이터: 날짜별 시간 슬롯 (공유 저장소에서 실시간 구성) ----------
   // 모집중·마감임박·마감 상태 슬롯만 노출합니다 — 배정검토중(인터뷰어 미확인) 슬롯은 보이지 않습니다.
   let slotData = {};
@@ -436,38 +415,41 @@
         if(window.selectedDate) pickDate(window.selectedDate);
         return;
       }
-      const name = (document.getElementById('rsvName').value||'').trim() || '이름 미입력';
-      const email = (document.getElementById('rsvEmail').value||'').trim() || '이메일 미입력';
+      if(!currentVolunteerCode){ alert('예약코드로 먼저 로그인해 주세요.'); return; }
+      const existing=state.reservations.find(r=>r.volunteerCode===currentVolunteerCode && r.status==='확정');
+      if(existing){ showReservation(existing,state); return; }
       slot.booked += 1;
       const remain = slot.cap - slot.booked;
       if(remain<=0) slot.status = '마감';
       else if(remain/slot.plannedCap <= 0.34) slot.status = '마감임박';
 
-      const resv = { id:'R-'+Date.now(), name, email, kind: window.selectedKind||'개인',
+      const resv = { id:'R-'+Date.now(), volunteerCode:currentVolunteerCode,
         slotId: slot.id, slotLabel: slot.id+' · '+slot.time, status:'확정', zoomSent:false, at: DemoStore.nowLabel() };
       state.reservations.unshift(resv);
 
       if(slot.status === '마감'){
         state.reservations.forEach(r=>{ if(r.slotId===slot.id) r.zoomSent = true; });
-        DemoStore.addLog(state, slot.id+' 슬롯이 마감되어 신청자 전원에게 Zoom 안내 메일이 발송되었습니다.');
+        DemoStore.addLog(state, slot.id+' 슬롯이 마감되었습니다.');
       }
-      DemoStore.addLog(state, name+'이(가) '+slot.date+' '+slot.time+' 시간에 신청했습니다.');
+      DemoStore.addLog(state, currentVolunteerCode+' 코드로 '+slot.date+' '+slot.time+' 예약이 확정되었습니다.');
       DemoStore.save(state);
 
-      document.getElementById('successTitle').textContent = '신청이 잘 접수되었습니다';
-      document.getElementById('successBody').textContent = slot.status==='마감'
-        ? '방금 신청으로 이 시간이 마감되어, 인터뷰 확정 안내와 접속 링크를 '+email+'(으)로 바로 보내드립니다.'
-        : '확인한 뒤 인터뷰 확정 여부와 접속 링크를 '+email+'(으)로 보내드립니다.';
+      document.getElementById('successTitle').textContent = '인터뷰 예약이 확정되었습니다';
+      document.getElementById('successBody').innerHTML = '<b>'+DemoStore.fmtDateLabel(slot.date)+' '+slot.time+'</b><br><br>예약시간 15분 전까지 Zoom 대기실에 입장해 주세요.<br>인터뷰 진행 상황에 따라 예정 시간보다 조금 일찍 시작하거나 늦게 시작할 수 있습니다.';
+      document.getElementById('successRef').textContent = '예약코드 '+currentVolunteerCode;
     } else {
+      const code=DemoStore.findVolunteerCode(DemoStore.load(),document.getElementById('helpCode').value), body=document.getElementById('helpBody').value.trim();
+      if(!code||!body){ alert('예약코드와 문의 내용을 입력해 주세요.'); return; }
+      const state=DemoStore.load(); state.helpdesk.unshift({id:'HD-'+Date.now(),volunteerCode:code,body:body,status:'접수',at:DemoStore.nowLabel()}); DemoStore.save(state);
       document.getElementById('successTitle').textContent = '문의가 잘 접수되었습니다';
-      document.getElementById('successBody').textContent = '담당 형제가 확인한 뒤 평일 기준 하루 안에 이메일로 답변드립니다.';
+      document.getElementById('successBody').textContent = '예약코드 기준으로 문의가 접수되었습니다.';
+      document.getElementById('successRef').textContent = '예약코드 '+code;
     }
 
     document.getElementById('panel-reserve').style.display = 'none';
     document.getElementById('panel-help').style.display = 'none';
     document.querySelector('.tabs').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
-    document.getElementById('successRef').textContent = '접수번호 ' + ref;
   }
 
   renderCalendar();

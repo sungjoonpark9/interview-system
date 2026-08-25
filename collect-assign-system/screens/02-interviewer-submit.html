@@ -111,11 +111,11 @@
   <div class="card" id="formCard">
     <div class="intro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div>알려주신 시간은 담당자가 신청자와 시간을 매칭하는 데 사용됩니다.<br>이 화면에는 이름·이메일을 입력하거나 저장하지 않습니다.<br>배정 결과는 승인된 별도 채널로 안내합니다.</div>
+      <div>인터뷰 가능한 2시간 30분 운영타임을 모두 선택해 주세요.<br>이 화면에는 이름·이메일을 입력하거나 저장하지 않습니다.<br>배정 결과는 승인된 별도 채널로 안내합니다.</div>
     </div>
 
     
-    <div class="row2">
+    <div class="row2 single">
       <div class="field" id="interviewerCodeField">
         <label>인터뷰어 코드<span class="req">*</span></label>
         <div class="input-icon">
@@ -123,16 +123,9 @@
           <input type="text" id="ivCode" placeholder="예: INT-2027-01" autocomplete="off" style="text-transform:uppercase">
         </div>
       </div>
-      <div class="field">
-        <label>시간대별 기본 처리 인원</label>
-        <div class="input-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20v-10M18 20v-16"/></svg>
-          <input type="number" id="ivMaxDay" placeholder="예: 3" min="1" max="20" value="3">
-        </div>
-      </div>
     </div>
-    <div class="sec-title">가능한 날짜 고르기 (여러 날 고르실 수 있습니다)</div>
-    <div class="sec-note">인터뷰가 가능한 날짜를 모두 눌러주십시오. 날짜별 실제 시간대와 처리 가능 인원을 아래에서 조정할 수 있습니다.</div>
+    <div class="sec-title">가능한 운영타임 고르기 (복수 선택 가능)</div>
+    <div class="sec-note">달력에서 운영일을 선택한 뒤 가능한 2시간 30분 타임을 선택해 주세요.</div>
 
     <div class="cal-head">
       <div class="mo" id="calMonthLabel">2026년 10월</div>
@@ -140,14 +133,14 @@
     <div class="cal-grid" id="calDow"></div>
     <div class="cal-grid" id="calGrid"></div>
 
-    <div class="sec-title" style="margin-top:22px;">날짜별로 가능한 시간</div>
+    <div class="sec-title" style="margin-top:22px;">2시간 30분 운영타임</div>
     <div id="dateBlocks"><div class="empty-note">먼저 위 달력에서 날짜를 골라 주세요.</div></div>
 
     <div class="summary-title">이렇게 알려드리면 될까요?</div>
     <div class="summary-chips" id="summaryChips"><span class="sum-empty">아직 고른 시간이 없습니다.</span></div>
 
         <div class="privacy" style="margin-bottom:12px;">선택하신 시간은 인터뷰 배정을 매칭하는데만 사용됩니다.</div>
-    <button class="btn-submit" id="submitBtn" disabled onclick="submitAvail()">이 시간으로 알려주기</button>
+    <button class="btn-submit" id="submitBtn" disabled onclick="submitAvail()">이 운영타임으로 알려주기</button>
     <div class="privacy">알려주신 내용은 인터뷰 배정을 짜는 데에만 씁니다.</div>
   </div>
 
@@ -156,7 +149,7 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <h3>잘 알려주셨습니다</h3>
-    <p id="successBody">알려주신 시간은 다음 배정 실행 때 반영됩니다.</p>
+    <p id="successBody">선택한 운영타임이 인터뷰어 팀 수와 슬롯 정원에 반영됩니다.</p>
   </div>
 
   <div class="footer-tag">이 화면은 브라우저에 저장되는 연동 데모입니다 · <a href="03-admin-workbook.html" style="color:var(--blue);">관리자 워크북에서 확인하기 →</a></div>
@@ -179,11 +172,12 @@
 <script>
   const viewYear = 2026, viewMonth = 9; // 2026년 10월 (1차 인터뷰어 활동 기간 고정)
   const chosenDates = new Set();
-  const availability = {};
-  const capacities = {};
+  const selectedTimeIds = new Set();
   const dowNames = ['일','월','화','수','목','금','토'];
 
   function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function operatingTimes(){ return (CAStore.load().interviewTimes||[]).slice().sort(function(a,b){return (a.date+a.start).localeCompare(b.date+b.start);}); }
+  function timesForDate(dstr){ return operatingTimes().filter(function(it){return it.date===dstr;}); }
 
   function renderCalendar(){
     document.getElementById('calMonthLabel').textContent = viewYear + '년 ' + (viewMonth+1) + '월';
@@ -195,8 +189,9 @@
     for(let i=0;i<startDow;i++) html += '<div class="cal-cell blank"></div>';
     for(let d=1; d<=daysInMonth; d++){
       const dstr = viewYear+'-'+pad(viewMonth+1)+'-'+pad(d);
+      const active = timesForDate(dstr).length>0;
       const cls = chosenDates.has(dstr) ? ' chosen' : '';
-      html += '<div class="cal-cell'+cls+'" onclick="toggleDate(\''+dstr+'\')">'+d+'</div>';
+      html += '<div class="cal-cell'+(active?cls:' blank')+'"'+(active?' onclick="toggleDate(\''+dstr+'\')"':'')+'>'+d+'</div>';
     }
     document.getElementById('calGrid').innerHTML = html;
   }
@@ -204,13 +199,10 @@
   function toggleDate(dstr){
     if(chosenDates.has(dstr)){
       chosenDates.delete(dstr);
-      delete availability[dstr];
-      Object.keys(capacities).forEach(function(k){ if(k.indexOf(dstr+' ')===0) delete capacities[k]; });
+      timesForDate(dstr).forEach(function(it){selectedTimeIds.delete(it.id);});
     } else {
       chosenDates.add(dstr);
-      // 날짜를 고르면 그 요일에 정해진 시간대를 자동으로 모두 가능시간에 포함
-      availability[dstr] = new Set(CAStore.blockRangeForDate(dstr).map(b=>b.start));
-      CAStore.blockRangeForDate(dstr).forEach(function(b){ capacities[dstr+' '+b.start]=Number(document.getElementById('ivMaxDay').value)||3; });
+      timesForDate(dstr).forEach(function(it){selectedTimeIds.add(it.id);});
     }
     renderCalendar();
     renderDateBlocks();
@@ -230,11 +222,9 @@
       return;
     }
     el.innerHTML = dates.map(dstr=>{
-      const blocks = CAStore.blockRangeForDate(dstr);
-      const rows = blocks.map(function(b){
-        const key=dstr+' '+b.start, on=availability[dstr].has(b.start);
-        return '<div class="slot-row"><button type="button" class="slot-toggle'+(on?' on':'')+'" onclick="toggleTime(\''+dstr+'\',\''+b.start+'\')">'+b.range+'</button>'+
-          '<label style="font-size:11px;color:var(--gray)">처리 <input class="capacity" type="number" min="1" max="20" value="'+(capacities[key]||3)+'" onchange="setCapacity(\''+key+'\',this.value)">명</label></div>';
+      const rows = timesForDate(dstr).map(function(it){
+        const on=selectedTimeIds.has(it.id);
+        return '<div class="slot-row" style="grid-template-columns:1fr"><button type="button" class="slot-toggle'+(on?' on':'')+'" onclick="toggleTime(\''+it.id+'\')">'+it.start+'~'+it.end+' · 2시간 30분</button></div>';
       }).join('');
       return '<div class="date-block">'+
         '<div class="dh"><div class="dlabel">'+fmtDate(dstr)+'</div><div class="remove" onclick="toggleDate(\''+dstr+'\')">이 날 빼기</div></div>'+
@@ -242,31 +232,24 @@
     }).join('');
   }
 
-  function toggleTime(dstr, t){
-    if(availability[dstr].has(t)) availability[dstr].delete(t);
-    else availability[dstr].add(t);
+  function toggleTime(id){
+    if(selectedTimeIds.has(id)) selectedTimeIds.delete(id);
+    else selectedTimeIds.add(id);
     renderDateBlocks();
     renderSummary();
   }
 
-  function setCapacity(key, value){ capacities[key]=Math.max(1, Math.min(20, Number(value)||1)); }
-
   function renderSummary(){
     const el = document.getElementById('summaryChips');
-    let entries = [];
-    Object.keys(availability).sort().forEach(dstr=>{
-      Array.from(availability[dstr]).sort().forEach(t=>{ entries.push({d:dstr, t:t}); });
-    });
+    let entries = operatingTimes().filter(function(it){return selectedTimeIds.has(it.id);});
     if(entries.length===0){
       el.innerHTML = '<span class="sum-empty">아직 고른 시간이 없습니다.</span>';
       document.getElementById('submitBtn').disabled = true;
       return;
     }
     el.innerHTML = entries.map(e=>{
-      const short = fmtDate(e.d).replace(/\([^)]+\)/,'');
-      const blk = CAStore.blockRangeForDate(e.d).find(b=>b.start===e.t);
-      const rangeLabel = blk ? blk.range : e.t;
-      return '<span class="sum-chip">'+short+' '+rangeLabel+'<span class="x" onclick="toggleTime(\''+e.d+'\',\''+e.t+'\')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>';
+      const short = fmtDate(e.date).replace(/\([^)]+\)/,'');
+      return '<span class="sum-chip">'+short+' '+e.start+'~'+e.end+'<span class="x" onclick="toggleTime(\''+e.id+'\')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></span>';
     }).join('');
     document.getElementById('submitBtn').disabled = false;
   }
@@ -278,21 +261,20 @@
       alert('인터뷰어 코드를 다시 확인해 주십시오. 예: INT-2027-01');
       return;
     }
-    const defaultCapacity = Number(document.getElementById('ivMaxDay').value) || 3;
-
-    const dates = Object.keys(availability).sort();
-    const times = [];
-    dates.forEach(function(d){ Array.from(availability[d]).sort().forEach(function(t){ times.push(d+' '+t); }); });
+    const selected=operatingTimes().filter(function(it){return selectedTimeIds.has(it.id);});
+    const timeIds=selected.map(function(it){return it.id;});
+    const times=selected.map(function(it){return it.date+' '+it.start;});
 
     const state = CAStore.load();
-    const row={ interviewerCode, maxDay: defaultCapacity, defaultCapacity, capacities, times, source:'인터뷰어 직접 제출', at: CAStore.nowLabel() };
+    const row={ interviewerCode, timeIds:timeIds, times:times, source:'interviewer-direct', at: CAStore.nowLabel() };
     const existing=state.availability.find(function(a){ return a.interviewerCode===interviewerCode; });
     if(existing) Object.assign(existing,row); else state.availability.push(row);
-    CAStore.addLog(state, CAStore.maskCode(interviewerCode)+' 인터뷰어 코드로 '+dates.length+'개 날짜 · '+times.length+'개 시간대가 제출되었습니다.');
+    CAStore.rebuildTeamCapacity(state);
+    CAStore.addLog(state, CAStore.maskCode(interviewerCode)+' 인터뷰어 코드로 '+timeIds.length+'개 운영타임이 제출되었습니다.');
     CAStore.save(state);
 
     document.getElementById('successBody').innerHTML =
-      dates.length+'개 날짜, '+times.length+'개 시간대가 등록되었습니다.<br>다음 배정 실행 때 슬롯에 반영됩니다.';
+      timeIds.length+'개의 2시간 30분 운영타임이 등록되었습니다.<br>운영 가능한 인터뷰어 팀 수에 반영되었습니다.';
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
   }
@@ -303,17 +285,15 @@
       if(!s || s.role!=='interviewer' || !s.code) return;
       document.getElementById('ivCode').value=s.code;
       document.getElementById('interviewerCodeField').style.display='none';
-      document.querySelector('.row2').classList.add('single');
       var row=CAStore.load().availability.find(function(a){return a.interviewerCode===s.code;});
       if(!row) return;
-      document.getElementById('ivMaxDay').value=row.defaultCapacity||row.maxDay||3;
-      (row.times||[]).forEach(function(v){
-        var p=v.split(' '),d=p[0],t=p[1];
-        chosenDates.add(d);
-        if(!availability[d]) availability[d]=new Set();
-        availability[d].add(t);
+      var ids=(row.timeIds||[]).slice();
+      if(!ids.length) (row.times||[]).forEach(function(v){var p=v.split(' '),it=operatingTimes().find(function(x){return x.date===p[0]&&x.start===p[1];});if(it)ids.push(it.id);});
+      ids.forEach(function(id){
+        var it=operatingTimes().find(function(x){return x.id===id;});
+        if(!it)return;
+        selectedTimeIds.add(id); chosenDates.add(it.date);
       });
-      Object.keys(row.capacities||{}).forEach(function(k){capacities[k]=row.capacities[k];});
     }catch(e){}
   }
 

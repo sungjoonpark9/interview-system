@@ -84,7 +84,7 @@ function renderAssignments(){
     var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
     if(!slot) return false;
     if(session.role==='admin'||session.role==='system') return true;
-    return slot.interviewer===session.code;
+    return slot.interviewer===session.code || (slot.interviewerCodes||[]).indexOf(session.code)>=0;
   }).map(function(row){
     var slot=(state.slots||[]).find(function(s){return s.id===row.slotId});
     return {row:row,slot:slot};
