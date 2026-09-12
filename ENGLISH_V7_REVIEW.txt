@@ -1,0 +1,16 @@
+Bilingual English v7
+====================
+Focus of v7:
+- Keeps the stable v6 observer (no attribute-mutation loop).
+- Expands full-sentence translations for the exact screens reported by the user:
+  sample booking codes, volunteer home, interviewer home, assignments, notices,
+  FAQ, note helper, and VM administrator login.
+- Adds translations for mixed strings produced by earlier partial replacements.
+- Korean core application logic remains unchanged.
+
+After deployment:
+1. Ctrl+F5
+2. Switch to English.
+3. Check Volunteer > sample booking code, Home, Notices, FAQ.
+4. Check Interviewer > Home, Availability, Assignments, Note Helper.
+5. Check VM Admin login.

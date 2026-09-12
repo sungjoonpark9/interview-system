@@ -453,6 +453,58 @@
     ["코드","Code"],
     ["예약형","Direct Booking"],
     ["Full 테스트","Full Test"],
+    ["전체 테스트","Full Test"],
+    ["Full 테스트","Full Test"],
+    ["예약 완료","Booking Confirmed"],
+    ["예약하기","Book Interview"],
+    ["예:","Example:"],
+    ["인터뷰 예약이 확정되었습니다. 예약한 일정을 확인할 수 있습니다.","Your interview booking is confirmed. You can review your scheduled interview."],
+    ["인터뷰 예약이 확정되었습니다.","Your interview booking is confirmed."],
+    ["예약한 일정을 확인할 수 있습니다.","You can review your scheduled interview."],
+    ["2시간 30분 운영타임을 확인하고, 배정된 인터뷰 대상 목록을 확인할 수 있습니다.","Review your 2.5-hour operating times and the volunteers assigned to you."],
+    ["인터뷰 가능한 2시간 30분 운영타임을 선택합니다.","Select the 2.5-hour operating times when you are available to interview."],
+    [" — 예약 없음"," — No Booking"],
+    ["예약 없음","No Booking"],
+    ["분 인터뷰","-minute interview"],
+    ["인터뷰","Interview"],
+    ["인터뷰 예약 안내","Interview Scheduling Guide"],
+    ["예약코드로 로그인해 현재 예약 가능한 인터뷰 시간 하나를 선택해 주십시오.","Sign in with your booking code and select one of the currently available interview times."],
+    ["인터뷰어 가용시간 확인","Review Interviewer Availability"],
+    ["기존에 제출한 가용시간을 확인하고 변경이 있으면 수정해 주십시오.","Review the availability you previously submitted and update it if anything has changed."],
+    ["공통 공지와 자원봉사자 공지를 보여 줍니다. 등록 후 7일 이내 공지에는 N이 표시됩니다.","General notices and volunteer notices are shown. Notices added within the last 7 days are marked N."],
+    ["공통 공지와 인터뷰어 공지를 보여 줍니다. 등록 후 7일 이내 공지에는 N이 표시됩니다.","General notices and interviewer notices are shown. Notices added within the last 7 days are marked N."],
+    ["인터뷰 시간은 어떻게 예약하나요?","How do I book an interview time?"],
+    ["예약코드로 로그인한 뒤 현재 정원이 남은 날짜와 시작시간 중 하나를 직접 선택합니다.","Sign in with your booking code, then select an available date and start time."],
+    ["예약시간은 어떤 기준으로 만들어지나요?","How are interview times created?"],
+    ["Excel/로컬 관리도구에서 전달된 2시간 30분 운영 타임을 30분 인터뷰와 10분 전환 간격으로 나누어 표시합니다.","Each 2.5-hour operating block provided by Excel or the local management tool is divided into 30-minute interviews with 10-minute transition intervals."],
+    ["확정한 예약은 어디에서 확인하나요?","Where can I view my confirmed booking?"],
+    ["같은 예약코드로 로그인하면 예약 확인 화면에서 확정된 날짜와 시작시간을 확인할 수 있습니다.","Sign in with the same booking code and open My Interview to view the confirmed date and start time."],
+    ["가족과 함께 인터뷰를 받을 수 있나요?","Can I be interviewed together with a family member?"],
+    ["자원봉사자 면접은 개별 면접이 원칙입니다. 각자 예약코드로 가능한 시간을 제출해 주십시오.","Volunteer interviews are conducted individually. Each person should use their own booking code."],
+    ["예약을 변경하고 싶습니다.","I need to change my booking."],
+    ["예약 확정 후 변경이 필요하면 문의하기에서 예약코드 기준으로 요청해 주십시오.","If a change is needed after confirmation, submit a request through Contact Support using your booking code."],
+    ["인터뷰어 가용시간을 변경하려면 어떻게 하나요?","How can I change my interviewer availability?"],
+    ["제출 마감 전에는 같은 인터뷰어 코드로 다시 접속해 수정할 수 있습니다. 배정 후에는 헬프데스크로 요청해 주십시오.","Before the submission deadline, sign in again with the same interviewer code to update your availability. After assignments are made, contact the Help Desk."],
+    ["VM 운영 관리자","VM Operations Administrator"],
+    ["VM 운영 Administration","VM Operations Administrator"],
+    ["발급받은 관리자 코드로 로그인해 주십시오.","Sign in with your issued administrator code."],
+    ["발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.","Sign in with your issued interviewer code. Do not enter your name or email address."],
+    ["Sign In해 주십시오.","Please sign in."],
+    ["로그인해 주십시오.","Please sign in."],
+    ["예: 외국어 응대 안내·행정 지원, IT 지원","Example: foreign-language guest assistance, administrative support, IT support"],
+    ["예: 2019 대표단 지원, 지역대회 주차·안내","Example: 2019 delegate support, regional convention parking/greeting"],
+    ["예: 호텔 외국인 응대 — 대표단 접점 희망","Example: hotel foreign-language assistance — prefers delegate-facing work"],
+    ["예: 대회 전 주중 저녁, 대회 기간 전 일정","Example: weekday evenings before the convention; available throughout the convention"],
+    ["예: 보통 / 10명 이내","Example: moderate / up to 10 people"],
+    ["예: 부부 동일 업무 희망","Example: prefers the same assignment as spouse"],
+    ["예: 호텔 외국인 응대 — 숙박 체크인 지원 — 응대 경험","Example: hotel foreign-language assistance — check-in support — guest-service experience"],
+    ["예: 안내부 — 응대 성향 / 주차부 — 지역대회 경험","Example: Greeting — people-oriented / Parking — regional convention experience"],
+    ["Booking Code로 Sign In해 현재 Available Interview Times 하나를 선택해 주십시오.","Sign in with your booking code and select one of the currently available interview times."],
+    ["Confirmed한 예약은 어디에서 확인하나요?","Where can I view my confirmed booking?"],
+    ["Confirmed된 Date와 Start Time을 확인할 수 있습니다.","You can view the confirmed date and start time."],
+    ["Interview Booking Confirmed. 예약한 일정을 확인할 수 있습니다.","Your interview booking is confirmed. You can review your scheduled interview."],
+    ["2.5-Hour Operating Time을 확인하고, 배정된 인터뷰 대상 목록을 확인할 수 있습니다.","Review your 2.5-hour operating times and the volunteers assigned to you."],
+    ["VM 운영 Administration","VM Operations Administrator"],
   ];
 
   // longest first so specific phrases win
@@ -488,6 +540,14 @@
            .replace(/예약코드/g,'Booking Code')
            .replace(/로 접속 중/g,' signed in')
            .replace(/로 로그인됨/g,' signed in');
+    // Final cleanup for common Korean fragments that can remain after partial phrase translation.
+    out=out.replace(/예약한 일정을 확인할 수 있습니다\.?/g,'You can review your scheduled interview.')
+           .replace(/배정된 인터뷰 대상 목록을 확인할 수 있습니다\.?/g,'Review the volunteers assigned to you.')
+           .replace(/인터뷰 대상 목록/g,'assigned volunteer list')
+           .replace(/예약 없음/g,'No Booking')
+           .replace(/전체 테스트/g,'Full Test')
+           .replace(/Full 테스트/g,'Full Test')
+           .replace(/안내/g,'Guide');
     return out;
   }
 
