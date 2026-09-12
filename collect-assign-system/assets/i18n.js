@@ -349,6 +349,109 @@
     ['화면에서 발급받은 인터뷰어 코드 입력 후 날짜 하나와 시간 1~2개를 골라 제출','Enter the issued interviewer code, choose one date and one or two times, then submit.'],
     ['화면에서 자주 묻는 질문을 확인하고, "관리자 모드"에서 새 질문·답변을 직접 등록해보기','Review the FAQ, then use Administration mode to add a new question and answer.'],
     ['확정된 배정 결과를 담당자가 승인된 별도 채널 또는 JW Hub를 통해 자원봉사자·인터뷰어에게 안내합니다. 이 앱은 이름·연락처를 저장하거나 자동 발송하지 않습니다.','An authorized operator communicates confirmed assignments to volunteers and interviewers through an approved separate channel or JW Hub. This app does not store names or contact details and does not send messages automatically.'],
+    ["자원봉사자로 로그인됨","Volunteer signed in"],
+    ["인터뷰어로 로그인됨","Interviewer signed in"],
+    ["콜센터 자원봉사자로 로그인됨","Help Desk Volunteer signed in"],
+    ["VM 운영 관리자로 로그인됨","VM Operations Administrator signed in"],
+    ["시스템 관리자로 로그인됨","System Administrator signed in"],
+    ["내 예약 확인","My Interview"],
+    ["확정된 인터뷰 날짜와 시간을 확인합니다.","Review your confirmed interview date and time."],
+    ["현재 예약 가능한 인터뷰 시간 중 하나를 직접 선택할 수 있습니다.","Choose one of the currently available interview times."],
+    ["예약 가능한 날짜와 시간을 확인합니다.","Review available interview dates and times."],
+    ["내 가능시간 제출","Submit My Availability"],
+    ["인터뷰 가능한 2시간 30분 운영타임을 선택합니다.","Select the 2.5-hour operating times when you are available."],
+    ["배정된 자원봉사자와 인터뷰 시간을 확인하고 메모를 작성합니다.","Review assigned volunteers and interview times, and prepare notes."],
+    ["문의함 열기","Open Request Inbox"],
+    ["접수된 문의를 확인하고 답변을 처리할 수 있습니다.","Review submitted requests and provide responses."],
+    ["접수된 문의를 확인하고 처리합니다.","Review and process submitted requests."],
+    ["로컬 관리도구에서 확정된 팀·슬롯과 예약 현황, 예외 상황을 확인합니다.","Review confirmed teams and slots from the local management tool, booking status, and exceptions."],
+    ["예약 운영 관리","Booking Administration"],
+    ["운영타임, 팀 수, 정원과 예약 현황을 관리합니다.","Manage operating times, team counts, capacity, and booking status."],
+    ["계정·권한·설정·로그·배포 등 기술관리 역할입니다. 예약 및 인터뷰 내용은 기본 권한으로 열람하지 않습니다.","This role manages technical settings such as accounts, permissions, logs, and deployment. Booking and interview content is not available by default."],
+    ["현재 계정에 허용된 기능을 사용할 수 있습니다.","Use the functions permitted for the current account."],
+    ["로 로그인됨"," signed in"],
+    ["발급받은 인터뷰어 코드로 로그인해 주십시오. 이름이나 이메일은 입력하지 않습니다.","Sign in with your issued interviewer code. Do not enter a name or email address."],
+    ["발급받은 관리자 코드로 로그인해 주십시오.","Sign in with your issued administrator code."],
+    ["발급받은 콜센터 코드로 로그인해 주십시오.","Sign in with your issued help desk code."],
+    ["인터뷰어 01","Interviewer 01"],
+    ["인터뷰어 02","Interviewer 02"],
+    ["인터뷰어 03","Interviewer 03"],
+    ["인터뷰어 04","Interviewer 04"],
+    ["콜센터 01","Help Desk 01"],
+    ["콜센터는 서약 내용을 확인하고 체크한 뒤 로그인해 주세요.","Please review and accept the acknowledgment before signing in to the Help Desk."],
+    ["약식 서약 내용을 확인하고 체크해 주세요.","Please review and accept the acknowledgment."],
+    ["등록되지 않은 운영 코드입니다. 다시 확인해 주세요.","This operations code is not registered. Please check it and try again."],
+    ["이 화면에서 사용할 수 없는 코드입니다.","This code cannot be used on this screen."],
+    ["코드로 이미 로그인되어 있습니다."," is already signed in with this code."],
+    ["지원자 배정에 앞서, 인터뷰어 형제들이 가능한 날짜와 시간을 먼저 알려주시는 곳입니다","Interviewers provide their available dates and times here before volunteers are assigned."],
+    ["운영 가능한 날짜 없음","No Available Operating Dates"],
+    ["먼저 위 달력에서 날짜를 골라 주세요.","Select a date from the calendar above first."],
+    ["인터뷰어 코드를 다시 확인해 주십시오. 예: INT-2027-01","Please check the interviewer code. Example: INT-2027-01"],
+    ["개의 2시간 30분 운영타임이 등록되었습니다."," 2.5-hour operating times were added."],
+    ["개 운영타임이 제출되었습니다."," operating times were submitted."],
+    ["2시간 30분 운영타임이 등록되었습니다.","2.5-hour operating time added."],
+    ["이 날 빼기","Remove This Date"],
+    ["배정이 확정되면 이 화면에 표시됩니다.","Confirmed assignments will appear here."],
+    ["예약 없음","No Booking"],
+    ["확정팀 ","Confirmed Teams "],
+    ["함께하는 인터뷰어:","Co-interviewer:"],
+    ["개",""],
+    ["명",""],
+    ["수행 가능 업무","Suitable Assignments"],
+    ["관련 경험·기술","Relevant Experience & Skills"],
+    ["희망 업무·사유","Preferred Assignment / Reason"],
+    ["가능한 시간","Availability"],
+    ["체력·조직 관리","Physical Capacity / Team Management"],
+    ["기타","Other"],
+    ["배정 의견-대회 전","Assignment Notes—Pre-Convention"],
+    ["배정 의견-대회 중","Assignment Notes—During Convention"],
+    ["예: 외국어 응대 안내·행정 지원, IT 지원","Example: foreign-language guest assistance, administrative support, IT support"],
+    ["예: 2019 대표단 지원, 지역대회 주차·안내","Example: 2019 delegate support, regional convention parking/greeting"],
+    ["예: 호텔 외국인 응대 — 대표단 접점 희망","Example: hotel foreign-language assistance — prefers delegate-facing work"],
+    ["예: 대회 전 주중 저녁, 대회 기간 전 일정","Example: weekday evenings before the convention; available throughout the convention"],
+    ["예: 보통 / 10명 이내","Example: moderate / up to 10 people"],
+    ["예: 부부 동일 업무 희망","Example: prefers the same assignment as spouse"],
+    ["예: 호텔 외국인 응대 — 숙박 체크인 지원 — 응대 경험","Example: hotel foreign-language assistance — check-in support — guest-service experience"],
+    ["예: 안내부 — 응대 성향 / 주차부 — 지역대회 경험","Example: Greeting — people-oriented / Parking — regional convention experience"],
+    ["JW Hub에 메모를 옮긴 것을 확인하셨나요?\n면접을 종료하면 이 브라우저의 임시 메모가 삭제됩니다.","Have you copied the note to JW Hub?\nEnding the interview will clear the temporary note from this browser."],
+    ["현재 로그인한 인터뷰어가 포함된 확정 팀의 예약만 열 수 있습니다.","You can open only bookings assigned to a confirmed team that includes the currently signed-in interviewer."],
+    ["공통 공지와","General notices and"],
+    ["공지를 보여 줍니다. 등록 후 7일 이내 공지에는 N이 표시됩니다.","notices are shown. Notices added within the last 7 days are marked N."],
+    ["전체 공지를 관리합니다.","Manage all notices."],
+    ["제목과 내용을 입력해 주세요.","Enter a title and message."],
+    ["이 공지사항을 삭제할까요?","Delete this notice?"],
+    ["정형화된 유형만으로 설명하기 어려운 경우에만 200자 이내로 적어 주세요. 개인정보·민감정보는 입력하지 마십시오.","Use up to 200 characters only when the predefined request types are not sufficient. Do not enter personal or sensitive information."],
+    ["개인정보로 보이는 내용을 삭제한 뒤 다시 제출해 주십시오.","Remove any content that appears to contain personal information, then submit again."],
+    ["문의가 접수되었습니다.","Your request has been submitted."],
+    ["코드 문의가 접수되었습니다."," code request was submitted."],
+    ["에게 필요한 FAQ만 표시됩니다."," FAQ entries relevant to this role are shown."],
+    ["2인 1팀 기준 · 예약 ","2-person teams · Bookings "],
+    ["로컬 관리도구에서 수동배정","Manual assignment in local management tool"],
+    ["조정할 확정 예약이 없습니다.","There are no confirmed bookings to adjust."],
+    ["예약을 해제했습니다."," booking was released."],
+    ["일정 변경·취소 등 예외 처리로 이 예약을 해제할까요?","Release this booking for an exception such as a schedule change or cancellation?"],
+    ["데모 데이터를 초기 상태로 되돌릴까요? 브라우저에 저장된 이 데모의 모든 입력이 사라집니다.","Reset the demo to its initial state? All demo entries stored in this browser will be deleted."],
+    ["데모 데이터 초기화","Reset Demo Data"],
+    ["정원을","capacity to"],
+    ["명으로 변경했습니다.","."],
+    ["로 변경했습니다.","."],
+    ["배정 결과","Assignment Results"],
+    ["배정 실행","Run Assignment"],
+    ["수동조율필요","Manual Coordination Required"],
+    ["자동화","Automation"],
+    ["일정 변경","Schedule Change"],
+    ["시스템 오류","System Error"],
+    ["예약 완료","Booking Complete"],
+    ["예약하기","Book"],
+    ["로 예약할까요?","?"],
+    ["선택한 시간을 다시 확인해 주십시오.","Please review the selected time."],
+    ["배정 정보를 불러올 수 없습니다. 문의하기를 이용해 주십시오.","Unable to load assignment information. Please use Contact Support."],
+    ["문의","Support"],
+    ["역할 선택","Select Role"],
+    ["사용자","User"],
+    ["뒤로","Back"],
+    ["코드","Code"],
+    ["예약형","Direct Booking"],
   ];
 
   // longest first so specific phrases win
@@ -367,10 +470,23 @@
     out=out.replace(/(\d{1,2})\.(\d{1,2})\((일|월|화|수|목|금|토)\)/g,function(_,m,d,w){
       var wm={일:'Sun',월:'Mon',화:'Tue',수:'Wed',목:'Thu',금:'Fri',토:'Sat'}; return m+'/'+d+' ('+wm[w]+')';
     });
+    out=out.replace(/(\d+)시간\s*(\d+)분/g,'$1 hr $2 min');
     out=out.replace(/(\d+)분\s*인터뷰/g,'$1-minute interview');
+    out=out.replace(/(\d+)개의/g,'$1');
     out=out.replace(/(\d+)개/g,'$1');
     out=out.replace(/(\d+)명/g,'$1 people');
     out=out.replace(/(\d+)건/g,'$1');
+    // Standalone weekday labels used in calendars.
+    var trim=out.trim(), dayMap={일:'Sun',월:'Mon',화:'Tue',수:'Wed',목:'Thu',금:'Fri',토:'Sat'};
+    if(dayMap[trim]) out=out.replace(trim,dayMap[trim]);
+    // Common remaining Korean particles/phrases created by dynamic templates.
+    out=out.replace(/예약 없음/g,'No Booking')
+           .replace(/예약 확정/g,'Booking Confirmed')
+           .replace(/운영타임/g,'operating time')
+           .replace(/인터뷰어 코드/g,'Interviewer Code')
+           .replace(/예약코드/g,'Booking Code')
+           .replace(/로 접속 중/g,' signed in')
+           .replace(/로 로그인됨/g,' signed in');
     return out;
   }
 
@@ -454,10 +570,11 @@
       if(lang!=='en') return;
       ms.forEach(function(m){
         if(m.type==='characterData') translateTextNode(m.target);
+        if(m.type==='attributes') translateAttrs(m.target);
         Array.prototype.forEach.call(m.addedNodes||[],function(n){translateTree(n);});
       });
     });
-    mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+    mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label','value']});
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();

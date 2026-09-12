@@ -1,0 +1,14 @@
+Bilingual English v5
+====================
+- Original Korean app/session/navigation logic is unchanged.
+- English is an additive display layer only.
+- Expanded translations for volunteer home, interviewer login/home, availability,
+  assignment list, JW Hub note helper, notices, help desk, and admin workbook.
+- Added translation of dynamically inserted placeholders/labels and calendar strings.
+- Korean mode should remain identical to the original source.
+
+Recommended verification:
+1) Korean -> Volunteer / Interviewer / VM Admin login and navigation
+2) English -> repeat the same routes
+3) Check dynamic content after clicking buttons (availability submit, assignments, notices)
+4) Ctrl+F5 after GitHub Pages deployment
