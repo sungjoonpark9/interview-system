@@ -314,6 +314,8 @@
     ['에 있습니다. 설정 방법은 이 폴더의 README를 참고해 주세요.','For setup instructions, see the README in this folder.'],
     ['에서 문의를 하나 남긴 뒤, 다시 관리자 워크북으로 돌아가 ⑤헬프데스크 탭에서 확인','Submit a request there, then return to the Admin Workbook and review it in ⑤ Help Desk.'],
     ['예약 확정','Booking Confirmed'],
+    ['로 접속 중',' signed in'],
+    ['분 인터뷰','-minute interview'],
     ['예약코드로 로그인한 뒤 현재 예약 가능한 시간 하나를 선택합니다','Sign in with a booking code and select one currently available interview time.'],
     ['예약형','Direct Booking'],
     ['예외 조정','Exception Adjustment'],
@@ -362,6 +364,10 @@
       var wm={일:'Sun',월:'Mon',화:'Tue',수:'Wed',목:'Thu',금:'Fri',토:'Sat'}; return m+'/'+d+' ('+wm[w]+')';
     });
     out=out.replace(/(\d{1,2})월\s*(\d{1,2})일/g,'$1/$2');
+    out=out.replace(/(\d{1,2})\.(\d{1,2})\((일|월|화|수|목|금|토)\)/g,function(_,m,d,w){
+      var wm={일:'Sun',월:'Mon',화:'Tue',수:'Wed',목:'Thu',금:'Fri',토:'Sat'}; return m+'/'+d+' ('+wm[w]+')';
+    });
+    out=out.replace(/(\d+)분\s*인터뷰/g,'$1-minute interview');
     out=out.replace(/(\d+)개/g,'$1');
     out=out.replace(/(\d+)명/g,'$1 people');
     out=out.replace(/(\d+)건/g,'$1');

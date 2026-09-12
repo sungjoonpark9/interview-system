@@ -258,6 +258,8 @@
   };
   var LOGIN_SRC = 'screens/00-login.html';
 
+  function tr(s){ try { return (window.SICI18N && window.SICI18N.t) ? window.SICI18N.t(s) : s; } catch(e){ return s; } }
+
   var curTab = 'home';
   var curInquiry = 'notice';
   var session = null;          // 현재 로그인 세션 (CAAuth 세션과 동기화)
@@ -551,7 +553,8 @@
   })();
 </script>
 
-<script src="assets/i18n.js?v=20260912-en2">
+<script src="assets/i18n.js?v=20260912-en3"></script>
+<script>
   // Keep iframe language synchronized even if a screen was cached.
   (function(){
     var fr=document.getElementById('frame');
@@ -562,7 +565,7 @@
         if(!doc) return;
         if(!doc.querySelector('script[data-sic-i18n]')){
           var sc=doc.createElement('script');
-          sc.src='../assets/i18n.js?v=20260912-en2';
+          sc.src='../assets/i18n.js?v=20260912-en3';
           sc.setAttribute('data-sic-i18n','1');
           doc.head.appendChild(sc);
         }else if(fr.contentWindow.SICI18N){
