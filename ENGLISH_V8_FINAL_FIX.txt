@@ -1,0 +1,12 @@
+Bilingual English v8
+====================
+Focused final fix:
+- Recent Activity Log dynamic entries are translated:
+  [접속] -> [Sign-in]
+  "... Code로 Sign In했습니다." -> "... signed in with code."
+  operating-time submission logs -> natural English
+  booking confirmation/release logs -> natural English
+- Stable v7 translation behavior is otherwise unchanged.
+- Core Korean application logic remains untouched.
+
+After deployment, use Ctrl+F5 once to bypass GitHub Pages/browser cache.

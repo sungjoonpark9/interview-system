@@ -540,6 +540,26 @@
            .replace(/예약코드/g,'Booking Code')
            .replace(/로 접속 중/g,' signed in')
            .replace(/로 로그인됨/g,' signed in');
+
+    // Dynamic activity-log cleanup.
+    out=out.replace(/\[접속\]/g,'[Sign-in]')
+           .replace(/Code로 Sign In했습니다\./g,'signed in with code.')
+           .replace(/Code로 Sign In했습니다/g,'signed in with code')
+           .replace(/Code로 로그인했습니다\./g,'signed in with code.')
+           .replace(/Code로 로그인했습니다/g,'signed in with code')
+           .replace(/(\S+) Code로 (\d+) operating times were submitted\./g,'$1 submitted $2 operating times.')
+           .replace(/(\S+) Code로 (\d+)개 운영타임이 제출되었습니다\./g,'$1 submitted $2 operating times.')
+           .replace(/Code가 (\d+) operating times were submitted\./g,'submitted $1 operating times.')
+           .replace(/(\S+) Code가 (\d+)개 운영타임이 제출되었습니다\./g,'$1 submitted $2 operating times.')
+           .replace(/(\S+) Code가? (\d+) operating times were submitted\./g,'$1 submitted $2 operating times.')
+           .replace(/(\S+) Code가? (\d+)개 운영타임이 제출되었습니다\./g,'$1 submitted $2 operating times.')
+           .replace(/(\S+) Code가? ([0-9/]+ \([A-Za-z]{3}\) [0-9:]+) 예약을 Confirmed했습니다\./g,'$1 confirmed the booking for $2.')
+           .replace(/(\S+) Code가? ([0-9/]+ \([A-Za-z]{3}\) [0-9:]+) 예약을 확정했습니다\./g,'$1 confirmed the booking for $2.')
+           .replace(/예약을 Confirmed했습니다\./g,'confirmed the booking.')
+           .replace(/예약을 확정했습니다\./g,'confirmed the booking.')
+           .replace(/예약이 해제되었습니다\./g,'booking was released.')
+           .replace(/예약을 해제했습니다\./g,'booking was released.');
+
     // Final cleanup for common Korean fragments that can remain after partial phrase translation.
     out=out.replace(/예약한 일정을 확인할 수 있습니다\.?/g,'You can review your scheduled interview.')
            .replace(/배정된 인터뷰 대상 목록을 확인할 수 있습니다\.?/g,'Review the volunteers assigned to you.')
