@@ -316,29 +316,29 @@
 
     // 로그인 전에는 '역할 선택' 메뉴로 보이게 합니다.
     if(!session){
-      if(applicant) applicant.textContent='자원봉사자';
-      if(interviewer) interviewer.textContent='인터뷰어';
-      if(admin) admin.textContent='VM 운영 관리자';
-      if(callcenter) callcenter.textContent='콜센터';
-      if(inquiry) inquiry.textContent='도움말';
+      if(applicant) applicant.textContent=tr('자원봉사자');
+      if(interviewer) interviewer.textContent=tr('인터뷰어');
+      if(admin) admin.textContent=tr('VM 운영 관리자');
+      if(callcenter) callcenter.textContent=tr('콜센터');
+      if(inquiry) inquiry.textContent=tr('도움말');
       return;
     }
 
     // 로그인 후에는 현재 역할의 실제 업무 메뉴 이름으로 바꿉니다.
     if(session.role==='volunteer'){
-      if(applicant) applicant.textContent='인터뷰 예약';
-      if(vAssignment) vAssignment.textContent='예약 확인';
+      if(applicant) applicant.textContent=tr('인터뷰 예약');
+      if(vAssignment) vAssignment.textContent=tr('예약 확인');
     }else if(session.role==='interviewer'){
-      if(interviewer) interviewer.textContent='가능시간 입력';
-      if(assignment) assignment.textContent='배정 확인';
+      if(interviewer) interviewer.textContent=tr('가능시간 입력');
+      if(assignment) assignment.textContent=tr('배정 확인');
     }else if(session.role==='helpdesk'){
-      if(callcenter) callcenter.textContent='콜센터';
+      if(callcenter) callcenter.textContent=tr('콜센터');
     }else if(session.role==='admin' || session.role==='system'){
-      if(admin) admin.textContent='VM 운영 관리자';
-      if(callcenter) callcenter.textContent='콜센터';
+      if(admin) admin.textContent=tr('VM 운영 관리자');
+      if(callcenter) callcenter.textContent=tr('콜센터');
     }
 
-    if(inquiry) inquiry.textContent='도움말';
+    if(inquiry) inquiry.textContent=tr('도움말');
   }
 
   function updateTabVisibility(){
@@ -383,7 +383,7 @@
     if (session) {
       bar.classList.add('show');
       var roleLabel = session.role === 'admin' ? 'VM 운영 관리자' : session.role === 'system' ? '시스템 관리자' : session.role === 'helpdesk' ? '콜센터 자원봉사자' : session.role === 'volunteer' ? '자원봉사자' : '인터뷰어';
-      document.getElementById('sessionLabel').innerHTML = '<b>' + session.label + '</b> · ' + roleLabel + '로 접속 중';
+      document.getElementById('sessionLabel').innerHTML = '<b>' + tr(session.label) + '</b> · ' + tr(roleLabel + '로 접속 중');
     } else {
       bar.classList.remove('show');
     }
@@ -478,7 +478,7 @@
     document.getElementById('inquirySeg').classList.toggle('show', id === 'inquiry');
     if(id==='inquiry') updateInquirySegments();
 
-    document.getElementById('screenTitle').textContent = SCREENS[id].title.split(' · ')[0];
+    document.getElementById('screenTitle').textContent = tr(SCREENS[id].title.split(' · ')[0]);
 
     var src;
     if ((id === 'interviewer' || id === 'assignment' || id === 'admin' || id === 'callcenter') && !isAuthorizedFor(id)) {
@@ -551,6 +551,26 @@
   })();
 </script>
 
-<script src="assets/i18n.js?v=20260912-en1"></script>
+<script src="assets/i18n.js?v=20260912-en2">
+  // Keep iframe language synchronized even if a screen was cached.
+  (function(){
+    var fr=document.getElementById('frame');
+    if(!fr) return;
+    fr.addEventListener('load',function(){
+      try{
+        var doc=fr.contentDocument;
+        if(!doc) return;
+        if(!doc.querySelector('script[data-sic-i18n]')){
+          var sc=doc.createElement('script');
+          sc.src='../assets/i18n.js?v=20260912-en2';
+          sc.setAttribute('data-sic-i18n','1');
+          doc.head.appendChild(sc);
+        }else if(fr.contentWindow.SICI18N){
+          fr.contentWindow.SICI18N.apply(doc);
+        }
+      }catch(e){}
+    });
+  })();
+</script>
 </body>
 </html>
