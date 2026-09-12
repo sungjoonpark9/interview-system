@@ -1,0 +1,17 @@
+Bilingual English v6
+====================
+Critical fix:
+- Removed attribute MutationObserver from v5.
+- v5 could repeatedly mutate translated attributes and make the browser report "Page unresponsive".
+- Attribute translations still run on initial page load and on newly inserted DOM nodes.
+- Added write-only-if-changed safeguards for translated attributes.
+- Korean source application logic remains unchanged.
+- Refined sample labels: Booking Confirmed / Book Interview / Full Test.
+
+Recommended verification after GitHub Pages deployment:
+1. Ctrl+F5
+2. Korean mode: sign in and navigate normally.
+3. Switch to English.
+4. Open Volunteer > sample booking code screen.
+5. Navigate repeatedly between screens for 1-2 minutes.
+6. Confirm no browser hang.

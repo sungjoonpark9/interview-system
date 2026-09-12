@@ -441,8 +441,8 @@
     ["자동화","Automation"],
     ["일정 변경","Schedule Change"],
     ["시스템 오류","System Error"],
-    ["예약 완료","Booking Complete"],
-    ["예약하기","Book"],
+    ["예약 완료","Booking Confirmed"],
+    ["예약하기","Book Interview"],
     ["로 예약할까요?","?"],
     ["선택한 시간을 다시 확인해 주십시오.","Please review the selected time."],
     ["배정 정보를 불러올 수 없습니다. 문의하기를 이용해 주십시오.","Unable to load assignment information. Please use Contact Support."],
@@ -452,6 +452,7 @@
     ["뒤로","Back"],
     ["코드","Code"],
     ["예약형","Direct Booking"],
+    ["Full 테스트","Full Test"],
   ];
 
   // longest first so specific phrases win
@@ -502,10 +503,14 @@
   function translateAttrs(el){
     if(lang!=='en' || !el || el.nodeType!==1) return;
     ['placeholder','title','aria-label'].forEach(function(a){
-      if(el.hasAttribute(a)) el.setAttribute(a,enText(el.getAttribute(a)));
+      if(el.hasAttribute(a)){
+        var before=el.getAttribute(a), after=enText(before);
+        if(after!==before) el.setAttribute(a,after);
+      }
     });
     if(el.tagName==='INPUT' && ['button','submit','reset'].indexOf((el.type||'').toLowerCase())>=0 && el.value){
-      el.value=enText(el.value);
+      var beforeVal=el.value, afterVal=enText(beforeVal);
+      if(afterVal!==beforeVal) el.value=afterVal;
     }
   }
 
@@ -570,11 +575,10 @@
       if(lang!=='en') return;
       ms.forEach(function(m){
         if(m.type==='characterData') translateTextNode(m.target);
-        if(m.type==='attributes') translateAttrs(m.target);
         Array.prototype.forEach.call(m.addedNodes||[],function(n){translateTree(n);});
       });
     });
-    mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label','value']});
+    mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
